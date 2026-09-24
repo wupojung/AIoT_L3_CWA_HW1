@@ -1,6 +1,10 @@
 # Taiwan Weather GIS Web
 
+[![CI](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml)
+
 以中央氣象署（CWA）Open Data 為資料來源的課程專案。專案目標是建立可測試、可持續整合、可部署的 Taiwan Weather GIS Web。
+
+> 上方 CI Badge 由 GitHub Actions 自動更新，反映 `main` branch 的實際 workflow 狀態，不是人工填寫的 PASS。
 
 ## Project Overview
 
@@ -40,11 +44,13 @@ Vercel
 | Area | Current Decision |
 | --- | --- |
 | Data Source | CWA Open Data |
+| Data / ETL | PowerShell |
 | Database | SQLite |
 | GIS | TBD |
 | Frontend | TBD |
-| Testing | TBD by actual runtime/toolchain |
+| Testing | Pester 6.2.0 |
 | CI | GitHub Actions |
+| CI Test Runner | Windows / PowerShell (`pwsh`) |
 | Deployment | Vercel |
 
 尚未確認的技術不提前假設；實作時依 Gate 需求與驗證結果決定。
@@ -65,31 +71,72 @@ Gate 5 — Vercel Deployment
 BUILD → RUN → TEST → VERIFY → PASS → NEXT GATE
 ~~~
 
+Testing 與 Continuous Integration 都是跨 Gate 品質機制。CI 不等待 Gate 4 才開始；只要產生可重複執行的 Automated Tests，就應納入 GitHub Actions。
+
+Gate 4 的角色是 **CI Hardening / Final Repository Verification**，而不是第一次建立 CI。
+
 詳細 Gate Contract 請見 [myplan/workflow.md](myplan/workflow.md)。
 
 ## Development Status
 
 | Gate | Status |
 | --- | --- |
-| Gate 1 — CWA API | PENDING |
-| Gate 2 — ETL & SQLite | PENDING |
+| Gate 1 — CWA API | PASS |
+| Gate 2 — ETL & SQLite | IN PROGRESS |
 | Gate 3 — Taiwan GIS Web | PENDING |
 | Gate 4 — GitHub & Continuous Integration | PENDING |
 | Gate 5 — Vercel Deployment | PENDING |
 
-> README 的狀態只做摘要。真正的 PASS 來源必須是 Automated Tests、GitHub Actions 與必要的 Manual Verification。
+> README 的 Gate Status 是 Project Progress Summary。真正的 Automated Verification Status 由 GitHub Actions CI Badge、workflow run 與必要的 Manual Verification 提供。
 
 ## Testing Strategy
 
-本專案重點測試 Parser、Transformer、ETL、Domain Logic 與 Repository。
+目前 PowerShell Automated Tests 使用 **Pester 6.2.0**。
 
-- Unit Tests：純邏輯、Parser、Transformer、Domain Logic。
-- Integration Tests：真實 CWA API、ETL pipeline、SQLite integration。
-- Repository Tests：使用 isolated temporary SQLite。
-- UI Verification：只測必要 application logic 與基本整合，不追求不必要的 UI coverage。
-- Deployment Smoke Test：Gate 5 驗證 Production。
+主要測試：
 
-詳細策略請見 [docs/testing.md](docs/testing.md)。
+- CWA Client / Parser
+- SQLite layer
+- ETL / Transformer
+- 後續 Application Logic
+
+測試程式放在：
+
+~~~text
+tests/
+~~~
+
+GitHub Actions 不另外實作一套 Tests，而是執行與 Local Development 相同的 Test Suite。
+
+### Local
+
+~~~powershell
+Invoke-Pester -Path ./tests -Output Detailed
+~~~
+
+### Continuous Integration
+
+~~~powershell
+Invoke-Pester -Path ./tests -CI -Output Detailed
+~~~
+
+流程：
+
+~~~text
+Code
+ ↓
+Local Pester
+ ↓
+Commit / Push
+ ↓
+GitHub Actions
+ ↓
+Pester
+ ↓
+PASS / FAIL
+~~~
+
+詳細測試規範請見 [docs/testing.md](docs/testing.md)。
 
 ## Project Structure
 
@@ -105,22 +152,34 @@ docs/
 ├── architecture.md
 └── testing.md
 
+src/
+├── CwaClient.psm1
+├── SQLiteHelper.psm1
+├── Run-Etl.ps1
+└── schema.sql
+
 tests/
+├── CwaClient.Tests.ps1
+├── SQLiteHelper.Tests.ps1
+└── fixtures/
 
 .github/
 └── workflows/
     └── ci.yml
 ~~~
 
-Application source structure 尚未決定，避免在取得真實 API Schema 與選定實作工具前過早設計。
-
 ## Setup
 
-目前尚未開始 Application implementation。實際安裝與執行指令會在技術棧確認後補上。
+目前 Application implementation 仍依 Gate 漸進建立。請使用 PowerShell 開發環境，並於本機安裝專案指定版本 Pester。
+
+~~~powershell
+Install-Module Pester -RequiredVersion 6.2.0 -Scope CurrentUser -Force
+Import-Module Pester -RequiredVersion 6.2.0 -Force
+~~~
 
 ## Environment Variables
 
-本機 Secret 使用 `.env`，但 `.env` 不得 Commit。
+本機 Secret 使用 `.env`，但 `.env` **不得 Commit 到 GitHub**。
 
 範例：
 
@@ -128,11 +187,38 @@ Application source structure 尚未決定，避免在取得真實 API Schema 與
 CWA_API_KEY=<YOUR_CWA_API_KEY>
 ~~~
 
-請由 `.env.example` 建立本機 `.env`。真正 API Key 不得寫入 Source Code、README、Markdown、Test Fixture 或 Git history。
+請由 `.env.example` 建立本機 `.env`。
+
+真正 API Key 不得寫入：
+
+- Source Code
+- README
+- Markdown 文件
+- Test Fixture
+- Git history
+
+GitHub Actions 若未來需要執行真實 CWA Integration Test，應使用 **GitHub Actions Secrets**，例如：
+
+~~~text
+CWA_API_KEY
+~~~
+
+並由 workflow 以 `${{ secrets.CWA_API_KEY }}` 注入環境變數，而不是上傳 `.env`。
+
+目前日常 CI 以 deterministic fixtures / mocks 為主，不需要 CWA Secret 即可執行。
 
 ## Running Tests
 
-測試指令會在 Gate 1 選定實際 runtime / testing tool 後加入。所有可重複的 automated tests 必須能由 Gate 4 的 GitHub Actions 執行。
+~~~powershell
+Invoke-Pester -Path ./tests -Output Detailed
+~~~
+
+新的或修改過的 Tests 採用 Pester 6 推薦的 `Should-*` assertions，例如：
+
+~~~powershell
+$result.Count | Should-Be 1
+{ Invoke-Something } | Should-Throw
+~~~
 
 ## Documentation
 
