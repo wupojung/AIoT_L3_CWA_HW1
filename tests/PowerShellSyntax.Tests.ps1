@@ -1,14 +1,21 @@
 Describe "PowerShell Syntax Tests" {
-    $sourceFiles = Get-ChildItem -Path "$PSScriptRoot\..\src" -Recurse -File |
-        Where-Object { $_.Extension -in @(".ps1", ".psm1") }
+    It "Parses all source PowerShell files without syntax errors" {
+        $sourceFiles = Get-ChildItem -Path "$PSScriptRoot\..\src" -Recurse -File |
+            Where-Object { $_.Extension -in @(".ps1", ".psm1") }
 
-    foreach ($file in $sourceFiles) {
-        It "Parses $($file.Name) without syntax errors" {
+        if ($sourceFiles.Count -eq 0) {
+            throw "No PowerShell source files were found under src/."
+        }
+
+        foreach ($file in $sourceFiles) {
             $source = Get-Content $file.FullName -Raw -Encoding UTF8
 
-            # ScriptBlock.Create parses the source without executing it.
-            # Any PowerShell syntax error throws and automatically fails this test.
-            [scriptblock]::Create($source) | Out-Null
+            try {
+                [scriptblock]::Create($source) | Out-Null
+            }
+            catch {
+                throw "PowerShell syntax error in '$($file.FullName)': $($_.Exception.Message)"
+            }
         }
     }
 }
