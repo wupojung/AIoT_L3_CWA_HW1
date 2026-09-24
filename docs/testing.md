@@ -59,6 +59,26 @@ $result.Count | Should Be 1
 
 Pester 5 classic syntax（例如 `Should -Be`）在 Pester 6 仍可執行，但本專案新程式碼統一採 `Should-*` 形式，避免不同世代語法混用。
 
+### No-Exception Test Rule
+
+Pester 6 沒有 `Should-NotThrow` assertion。
+
+若測試目的是確認某段程式「不應丟出例外」，直接在 `It` block 中執行該命令即可；任何 unexpected exception 都會自動讓該 test FAIL。
+
+~~~powershell
+It "Completes without exception" {
+    Invoke-Something
+}
+~~~
+
+不得使用不存在的：
+
+~~~powershell
+{ Invoke-Something } | Should-NotThrow
+~~~
+
+若維護舊版測試，可使用 classic syntax `Should -Not -Throw`，但新測試優先採直接執行方式。
+
 ### Test File Convention
 
 PowerShell Tests 放置於：
