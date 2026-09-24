@@ -46,10 +46,14 @@ FAIL → FIX → TEST AGAIN
 2. 取得真實 CWA Response 前不得猜 API Schema。
 3. CWA API Key 不得 Commit，也不得出現在文件、程式碼、fixture 或 log。
 4. Testing 是跨 Gate 的品質要求，不另建立 Gate 6。
-5. Agent 不得因為程式已產生就宣告 PASS；PASS 必須有 Verification Evidence。
-6. Automated Tests 與必要 Manual Verification 必須實際執行。
-7. Agent 只處理 CURRENT GATE，不得提前實作 Future Gates。
-8. 本專案不使用 CRISP-DM。
+5. Continuous Integration 也是跨 Gate 品質機制，不等待 Gate 4 才開始。
+6. 只要某個 Gate 已產生可重複執行的 Automated Tests，就應納入 GitHub Actions。
+7. Local 與 CI 必須執行同一套 Automated Test Suite。
+8. PowerShell Automated Tests 統一使用 Pester 6.2.0，新的或修改過的 Assertions 使用 Pester 6 `Should-*` syntax。
+9. Agent 不得因為程式已產生就宣告 PASS；PASS 必須有 Verification Evidence。
+10. Automated Tests 與必要 Manual Verification 必須實際執行。
+11. Agent 只處理 CURRENT GATE，不得提前實作 Future Gates。
+12. 本專案不使用 CRISP-DM。
 
 ---
 
@@ -80,6 +84,7 @@ FAIL → FIX → TEST AGAIN
 - Parser Unit Test：使用 sanitized real-response fixture。
 - 驗證 authentication failure / invalid response 等基本錯誤行為。
 - Manual Verification：Schema、時間範圍、行政區資料符合需求。
+- 可重複的 Unit Tests 應納入 GitHub Actions。
 
 ### PASS Criteria
 
@@ -88,6 +93,7 @@ FAIL → FIX → TEST AGAIN
 - [ ] Required fields / location structure 已確認。
 - [ ] Parser Unit Tests PASS。
 - [ ] API Integration Verification PASS。
+- [ ] 可重複 Tests 在 Local 與 GitHub Actions 均可執行。
 - [ ] 無 fake production weather data。
 - [ ] API Key 未出現在 tracked files / logs。
 
@@ -136,6 +142,8 @@ FAIL → FIX → TEST AGAIN
 - Repository Tests：isolated temporary SQLite。
 - ETL Tests：fixture → transform → temporary SQLite → verify。
 - 必要時執行真實 CWA → ETL → SQLite Integration Verification。
+- Local PowerShell 使用 Pester 6.2.0 執行 Automated Tests。
+- GitHub Actions 執行同一套 Pester tests。
 
 ### PASS Criteria
 
@@ -143,6 +151,8 @@ FAIL → FIX → TEST AGAIN
 - [ ] Transformer tests PASS。
 - [ ] Repository tests PASS。
 - [ ] ETL tests PASS。
+- [ ] Local Pester tests PASS。
+- [ ] GitHub Actions Pester tests PASS。
 - [ ] 真實 CWA data 可成功寫入並查詢。
 - [ ] Re-run 不會造成資料損壞或非預期 duplicate。
 - [ ] Database 可由 pipeline 重建。
@@ -152,12 +162,14 @@ FAIL → FIX → TEST AGAIN
 - 不開始 GIS implementation。
 - UI 不得直接承擔 ETL。
 - 不以 manual DB editing 掩蓋 pipeline bug。
+- 不刪除或弱化 failing tests 取得綠燈。
 
 ### Expected Output
 
 - Tested ETL pipeline。
 - Verified SQLite database layer。
 - Stable Repository interface。
+- Green Gate 2 CI evidence。
 
 ---
 
@@ -188,6 +200,7 @@ FAIL → FIX → TEST AGAIN
 - Location Mapping Tests。
 - Basic Integration / UI Verification。
 - Manual GIS Verification：地區與氣象資料對應正確。
+- 可自動化的 Gate 3 tests 納入既有 CI。
 - 不追求不必要的高 UI coverage。
 
 ### PASS Criteria
@@ -196,6 +209,7 @@ FAIL → FIX → TEST AGAIN
 - [ ] Weather data 來自已驗證資料層。
 - [ ] Location mapping 正確且 deterministic。
 - [ ] 必要 application logic tests PASS。
+- [ ] GitHub Actions 對相關 automated tests 為 PASS。
 - [ ] Basic UI / GIS verification PASS。
 - [ ] Loading / empty / error behavior 可接受。
 
@@ -217,12 +231,15 @@ FAIL → FIX → TEST AGAIN
 
 ### Goal
 
-讓 GitHub 成為可重現、可檢查的 Single Source of Truth，並用 GitHub Actions 自動執行必要品質檢查。
+完成 **CI Hardening / Final Repository Verification**，讓 GitHub 成為可重現、可檢查的 Single Source of Truth。
+
+Gate 4 不是第一次建立 CI。GitHub Actions 應從前面 Gate 持續執行；Gate 4 負責確認所有必要品質檢查已完整納入並穩定通過。
 
 ### Entry Criteria
 
 - `GATE 3 = PASS`。
 - Local application、tests、documentation 已達可重現狀態。
+- 前面 Gate 的 automated tests 已持續在 CI 執行。
 
 ### Required Tasks
 
@@ -230,25 +247,29 @@ FAIL → FIX → TEST AGAIN
 2. 確認 README / architecture / testing / workflow 與實作一致。
 3. 確認 `.env` 未 tracked，`.env.example` 不含真正 secret。
 4. 由 clean clone 驗證 setup。
-5. 在 `.github/workflows/ci.yml` 啟用實際 toolchain 所需的 install / lint / test / build。
+5. 確認 `.github/workflows/ci.yml` 已涵蓋實際 toolchain 所需的 test / lint / build。
 6. Push / Pull Request 自動觸發 CI。
+7. 確認 README CI Badge 正確反映 main branch workflow 狀態。
 
 ### Testing / Verification
 
-- GitHub Actions：Lint。
+- GitHub Actions：Repository baseline。
 - GitHub Actions：Automated Tests。
-- GitHub Actions：Build。
+- GitHub Actions：Lint（若 toolchain 已提供）。
+- GitHub Actions：Build（若應用程式已需要 build）。
 - Clean-clone verification。
 - Secret / tracked-file check。
 
 ### PASS Criteria
 
-- [ ] GitHub Actions workflow 已執行。
-- [ ] Lint PASS。
-- [ ] Automated Tests PASS。
-- [ ] Build PASS。
+- [ ] 所有 Required Automated Tests 已納入 CI。
+- [ ] GitHub Actions 對目前 main commit 為 PASS。
+- [ ] Local Test 與 CI 使用一致 Test Suite。
+- [ ] Lint PASS（若適用）。
+- [ ] Build PASS（若適用）。
 - [ ] Clean clone 可重現。
 - [ ] `.env` 未 tracked。
+- [ ] README CI Badge 可正確顯示 Workflow 狀態。
 - [ ] 文件與實作一致。
 
 ### Prohibited Actions
@@ -262,6 +283,7 @@ FAIL → FIX → TEST AGAIN
 
 - Reproducible GitHub repository。
 - Green GitHub Actions CI run。
+- README live CI status badge。
 
 ---
 
