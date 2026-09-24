@@ -1,9 +1,6 @@
 # Taiwan Weather GIS Web
 
 [![CI](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml)
-[![Gate 1 API](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml)
-[![Gate 2 Integration](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml)
-[![Gate 3 GIS](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml)
 
 以中央氣象署（CWA）Open Data 為資料來源的課程專案。專案目標是建立可測試、可持續整合、可部署的 Taiwan Weather GIS Web。
 
@@ -84,13 +81,13 @@ Gate 4 的角色是 **CI Hardening / Final Repository Verification**，而不是
 
 | Gate | Status |
 | --- | --- |
-| Gate 1 — CWA API | PASS |
-| Gate 2 — ETL & SQLite | PASS |
-| Gate 3 — Taiwan GIS Web | PENDING |
+| Gate 1 — CWA API | [![Gate 1 API](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml) |
+| Gate 2 — ETL & SQLite | [![Gate 2 Integration](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml) |
+| Gate 3 — Taiwan GIS Web | [![Gate 3 GIS](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml) |
 | Gate 4 — GitHub & Continuous Integration | PENDING |
 | Gate 5 — Vercel Deployment | PENDING |
 
-> README 的 Gate Status 是 Project Progress Summary。真正的 Automated Verification Status 由 GitHub Actions CI Badge、workflow run 與必要的 Manual Verification 提供。
+> Gate Badge 代表該 Gate 的 Automated Verification 狀態；正式 Gate PASS 仍須符合 `myplan/workflow.md` 中要求的 Manual Verification。
 
 ## Gate 1 Verification
 
