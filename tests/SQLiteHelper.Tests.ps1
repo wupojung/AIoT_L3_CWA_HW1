@@ -19,6 +19,16 @@ Describe "SQLiteHelper Tests" {
         (Test-Path "$PSScriptRoot\test_db.sqlite") | Should-BeTrue
     }
 
+    It "Can apply the project schema repeatedly" {
+        $schemaPath = Join-Path $PSScriptRoot "..\src\schema.sql"
+        $schemaSql = Get-Content $schemaPath -Raw -Encoding UTF8
+
+        Invoke-SqliteQuery -DatabasePath "$PSScriptRoot\test_db.sqlite" -Query $schemaSql
+        Invoke-SqliteQuery -DatabasePath "$PSScriptRoot\test_db.sqlite" -Query $schemaSql
+
+        (Test-Path "$PSScriptRoot\test_db.sqlite") | Should-BeTrue
+    }
+
     It "Throws exception on invalid SQL" {
         $invalidSql = "INSERT INTO non_existent_table VALUES (1);"
 
