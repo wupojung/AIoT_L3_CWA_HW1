@@ -12,13 +12,10 @@ function Invoke-CwaRequest {
     Write-Host "Fetching CWA dataset '$DatasetId'..."
 
     try {
-        $webClient = New-Object System.Net.WebClient
-        $webClient.Encoding = [System.Text.Encoding]::UTF8
-        $jsonStr = $webClient.DownloadString($uri)
-        return $jsonStr | ConvertFrom-Json
+        return Invoke-RestMethod -Uri $uri -Method Get -ErrorAction Stop
     }
     catch {
-        # Avoid leaking the API key if an HTTP exception includes the request URI.
+        # Do not expose the API key in logs even if an exception contains the request URI.
         $errorMessage = $_.Exception.Message
         if (-not [string]::IsNullOrEmpty($ApiKey)) {
             $errorMessage = $errorMessage.Replace($ApiKey, "***")
