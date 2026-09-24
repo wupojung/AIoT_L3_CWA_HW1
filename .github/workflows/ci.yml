@@ -10,7 +10,9 @@ permissions:
 
 jobs:
   repository-baseline:
+    name: Repository Baseline
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,8 +37,22 @@ jobs:
         run: |
           grep -q '^CWA_API_KEY=<YOUR_CWA_API_KEY>$' .env.example
 
-      - name: Runtime-specific CI status
+  powershell-tests:
+    name: PowerShell / Pester
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Pester 6.2.0
+        shell: pwsh
         run: |
-          echo "Repository baseline checks passed."
-          echo "Lint, automated tests, and build steps will be added when the actual runtime/toolchain is selected."
-          echo "Gate 4 cannot PASS until those project-specific checks are enabled and green."
+          Install-Module Pester -RequiredVersion 6.2.0 -Scope CurrentUser -Force
+          Import-Module Pester -RequiredVersion 6.2.0 -Force
+          Get-Module Pester
+
+      - name: Run Pester Tests
+        shell: pwsh
+        run: |
+          Invoke-Pester -Path ./tests -CI -Output Detailed
