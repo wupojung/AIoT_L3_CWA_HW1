@@ -1,11 +1,13 @@
 # Taiwan Weather GIS Web
 
 [![CI](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml)
+[![Gate 1 API](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml)
 [![Gate 2 Integration](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml)
+[![Gate 3 GIS](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml)
 
 以中央氣象署（CWA）Open Data 為資料來源的課程專案。專案目標是建立可測試、可持續整合、可部署的 Taiwan Weather GIS Web。
 
-> 上方 CI Badge 由 GitHub Actions 自動更新，反映 `main` branch 的實際 workflow 狀態，不是人工填寫的 PASS。
+> **CI Badge** 代表目前整個 repository 的日常健康狀態；**Gate Badges** 代表各 Gate 的自動化里程碑驗證。正式 Gate PASS 仍需符合 `myplan/workflow.md` 中要求的 Manual Verification。
 
 ## Project Overview
 
@@ -47,11 +49,11 @@ Vercel
 | Data Source | CWA Open Data |
 | Data / ETL | PowerShell |
 | Database | SQLite |
-| GIS | TBD |
-| Frontend | TBD |
-| Testing | Pester 6.2.0 |
+| Data Contract | Static JSON |
+| GIS | Leaflet |
+| Frontend | Vite + TypeScript |
+| Testing | Pester 6.2.0 + Vitest |
 | CI | GitHub Actions |
-| CI Test Runner | Windows / PowerShell (`pwsh`) |
 | Deployment | Vercel |
 
 尚未確認的技術不提前假設；實作時依 Gate 需求與驗證結果決定。
@@ -90,9 +92,29 @@ Gate 4 的角色是 **CI Hardening / Final Repository Verification**，而不是
 
 > README 的 Gate Status 是 Project Progress Summary。真正的 Automated Verification Status 由 GitHub Actions CI Badge、workflow run 與必要的 Manual Verification 提供。
 
-### Gate 2 Verification Evidence
+## Gate 1 Verification
 
-Gate 2 已完成真實整合驗證：
+`gate1-api.yml` 驗證：
+
+~~~text
+GitHub Repository Secret
+        ↓
+Real CWA API
+        ↓
+CwaClient / Parser
+        ↓
+Station records
+        ↓
+Required ID / Name / Coordinates
+        ↓
+Gate 1 Automated Verification
+~~~
+
+Gate 1 不負責 SQLite、GIS 或 frontend。
+
+## Gate 2 Verification
+
+`gate2-integration.yml` 驗證：
 
 ~~~text
 GitHub Repository Secret
@@ -105,20 +127,43 @@ SQLite weather.db
         ↓
 Database Query Verification
         ↓
-PASS
+Gate 2 Automated Verification
 ~~~
 
-最近一次 Gate 2 Integration 驗證結果：
+最近一次已確認的 Gate 2 integration evidence：
 
-- Repository Secret `CWA_API_KEY`：可由 GitHub Actions 正常注入。
+- Repository Secret `CWA_API_KEY` 可由 GitHub Actions 正常注入。
 - Real CWA API → ETL：PASS。
 - Parsed stations：363。
 - SQLite `weather_observations` rows：363。
 - Unique `StationId` rows：363。
 - Missing `StationId`：0。
-- Gate 2 Integration Workflow：PASS。
 
-Gate 2 Integration 採獨立 workflow，平常以手動觸發為主，避免每次 Push 都呼叫真實 CWA API。README 上方的 **Gate 2 Integration** Badge 會反映該 workflow 的最近驗證狀態。
+## Gate 3 Verification
+
+`gate3-gis.yml` 不重新呼叫 CWA API，而是驗證 Gate 2 → Gate 3 的資料契約與 frontend：
+
+~~~text
+Temporary SQLite
+        ↓
+Export-WeatherJson
+        ↓
+JSON Contract Test
+        +
+Tracked weather.json Validation
+        ↓
+TypeScript
+        ↓
+Vitest
+        ↓
+Vite Production Build
+        ↓
+dist/index.html + dist/weather.json
+        ↓
+Gate 3 Automated Verification
+~~~
+
+Gate 3 的自動化 Badge 綠燈後，仍需要依 `myplan/workflow.md` 完成實際 Taiwan GIS 畫面、marker / popup、location mapping 與 loading / empty / error 等 Manual Verification，才正式宣告 Gate 3 PASS。
 
 ## Testing Strategy
 
@@ -150,6 +195,17 @@ Invoke-Pester -Path ./tests -Output Detailed
 ~~~powershell
 Invoke-Pester -Path ./tests -CI -Output Detailed
 ~~~
+
+Frontend CI 使用：
+
+~~~bash
+npm ci
+npx tsc --noEmit
+npm run test -- --run
+npm run build
+~~~
+
+CI 使用 `package-lock.json` 與 `npm ci`，確保 clean clone 的 dependency installation 可重現。
 
 流程：
 
@@ -187,16 +243,30 @@ src/
 ├── CwaClient.psm1
 ├── SQLiteHelper.psm1
 ├── Run-Etl.ps1
+├── Export-WeatherJson.ps1
 └── schema.sql
 
 tests/
 ├── CwaClient.Tests.ps1
 ├── SQLiteHelper.Tests.ps1
+├── Export-WeatherJson.Tests.ps1
+├── PowerShellSyntax.Tests.ps1
 └── fixtures/
+
+web/
+├── package.json
+├── package-lock.json
+├── public/
+│   └── weather.json
+├── src/
+└── tests/
 
 .github/
 └── workflows/
-    └── ci.yml
+    ├── ci.yml
+    ├── gate1-api.yml
+    ├── gate2-integration.yml
+    └── gate3-gis.yml
 ~~~
 
 ## Setup
@@ -228,7 +298,7 @@ CWA_API_KEY=<YOUR_CWA_API_KEY>
 - Test Fixture
 - Git history
 
-GitHub Actions 若未來需要執行真實 CWA Integration Test，應使用 **GitHub Actions Secrets**，例如：
+GitHub Actions 的 Gate 1 / Gate 2 real integration workflows 使用 **GitHub Actions Secrets**：
 
 ~~~text
 CWA_API_KEY
@@ -236,7 +306,7 @@ CWA_API_KEY
 
 並由 workflow 以 `${{ secrets.CWA_API_KEY }}` 注入環境變數，而不是上傳 `.env`。
 
-目前日常 CI 以 deterministic fixtures / mocks 為主，不需要 CWA Secret 即可執行。
+日常 `ci.yml` 與 Gate 3 deterministic verification 不需要 CWA Secret；Gate 1 / Gate 2 才會使用 Repository Secret 呼叫真實 CWA API。
 
 ## Running Tests
 
