@@ -1,0 +1,94 @@
+name: Gate 2 Integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/gate2-integration.yml
+
+permissions:
+  contents: read
+
+jobs:
+  gate2-integration:
+    name: CWA to SQLite Integration
+    runs-on: windows-latest
+    env:
+      CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate CWA API secret
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CWA_API_KEY)) {
+            throw "Repository Secret CWA_API_KEY is missing or empty."
+          }
+          Write-Host "CWA_API_KEY is available to the workflow."
+
+      - name: Run Gate 2 ETL
+        shell: pwsh
+        run: |
+          ./src/Run-Etl.ps1
+
+      - name: Setup Python for SQLite verification
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify generated SQLite database
+        shell: pwsh
+        run: |
+          @'
+          import os
+          import sqlite3
+
+          db_path = os.path.join("data", "weather.db")
+          if not os.path.exists(db_path):
+              raise SystemExit("FAIL: data/weather.db was not created.")
+
+          connection = sqlite3.connect(db_path)
+          try:
+              row_count = connection.execute(
+                  "SELECT COUNT(*) FROM weather_observations"
+              ).fetchone()[0]
+
+              unique_station_count = connection.execute(
+                  "SELECT COUNT(DISTINCT StationId) FROM weather_observations"
+              ).fetchone()[0]
+
+              missing_station_ids = connection.execute(
+                  "SELECT COUNT(*) FROM weather_observations "
+                  "WHERE StationId IS NULL OR TRIM(StationId) = ''"
+              ).fetchone()[0]
+
+              if row_count <= 0:
+                  raise SystemExit("FAIL: weather_observations contains no rows.")
+
+              if unique_station_count != row_count:
+                  raise SystemExit(
+                      f"FAIL: duplicate StationId values detected "
+                      f"({unique_station_count} unique / {row_count} rows)."
+                  )
+
+              if missing_station_ids != 0:
+                  raise SystemExit(
+                      f"FAIL: {missing_station_ids} rows have missing StationId."
+                  )
+
+              print(f"PASS: weather_observations rows = {row_count}")
+              print(f"PASS: unique StationId rows = {unique_station_count}")
+              print("PASS: no missing StationId values")
+          finally:
+              connection.close()
+          '@ | python -
+
+      - name: Gate 2 integration summary
+        shell: pwsh
+        run: |
+          Write-Host "Gate 2 Integration PASS"
+          Write-Host "Real CWA API -> Parser -> ETL -> SQLite -> Query Verification"
