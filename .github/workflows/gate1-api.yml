@@ -1,0 +1,67 @@
+name: Gate 1 API
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/CwaClient.psm1"
+      - "tests/CwaClient.Tests.ps1"
+      - ".github/workflows/gate1-api.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  gate1-api:
+    name: Real CWA API Verification
+    runs-on: windows-latest
+    env:
+      CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate CWA API secret
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CWA_API_KEY)) {
+            throw "Repository Secret CWA_API_KEY is missing or empty."
+          }
+          Write-Host "CWA_API_KEY is available to the workflow."
+
+      - name: Verify real CWA API and parser
+        shell: pwsh
+        run: |
+          Import-Module ./src/CwaClient.psm1 -Force
+
+          $response = Invoke-CwaRequest -DatasetId "O-A0003-001" -ApiKey $env:CWA_API_KEY
+          $stations = @(ConvertFrom-CwaResponse -CwaResponse $response)
+
+          if ($stations.Count -le 0) {
+            throw "Gate 1 FAIL: CWA API returned no parsed station records."
+          }
+
+          $validStations = @(
+            $stations | Where-Object {
+              -not [string]::IsNullOrWhiteSpace([string]$_.StationId) -and
+              -not [string]::IsNullOrWhiteSpace([string]$_.StationName) -and
+              $null -ne $_.Latitude -and
+              $null -ne $_.Longitude
+            }
+          )
+
+          if ($validStations.Count -le 0) {
+            throw "Gate 1 FAIL: no station contains the required ID/name/coordinate fields."
+          }
+
+          Write-Host "PASS: parsed stations = $($stations.Count)"
+          Write-Host "PASS: stations with required fields = $($validStations.Count)"
+
+      - name: Gate 1 summary
+        shell: pwsh
+        run: |
+          Write-Host "Gate 1 PASS"
+          Write-Host "Real CWA API -> Parser -> Required Field Verification"
