@@ -25,6 +25,9 @@ jobs:
           test -f docs/testing.md
           test -f .env.example
           test -f .gitignore
+          test -f .github/workflows/gate1-api.yml
+          test -f .github/workflows/gate2-integration.yml
+          test -f .github/workflows/gate3-gis.yml
 
       - name: Verify .env is not tracked
         run: |
@@ -74,10 +77,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: './web/package.json'
+          cache-dependency-path: './web/package-lock.json'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Type Check
         run: npx tsc --noEmit
