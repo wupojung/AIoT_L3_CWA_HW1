@@ -1,0 +1,97 @@
+name: Gate 3 GIS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - "src/Export-WeatherJson.ps1"
+      - "src/SQLiteHelper.psm1"
+      - "tests/Export-WeatherJson.Tests.ps1"
+      - ".github/workflows/gate3-gis.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  export-contract:
+    name: SQLite to JSON Contract
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Pester 6.2.0
+        shell: pwsh
+        run: |
+          Install-Module Pester -RequiredVersion 6.2.0 -Scope CurrentUser -Force
+          Import-Module Pester -RequiredVersion 6.2.0 -Force
+
+      - name: Verify weather JSON export contract
+        shell: pwsh
+        run: |
+          Invoke-Pester -Path ./tests/Export-WeatherJson.Tests.ps1 -CI -Output Detailed
+
+  frontend-gis:
+    name: TypeScript / Vitest / Vite
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./web/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tracked weather data contract
+        run: |
+          node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('public/weather.json', 'utf8'));
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('Gate 3 FAIL: public/weather.json must be a non-empty array');
+          }
+          const ids = data.map(x => String(x.StationId ?? '').trim());
+          if (ids.some(id => !id)) {
+            throw new Error('Gate 3 FAIL: weather.json contains missing StationId');
+          }
+          if (new Set(ids).size !== ids.length) {
+            throw new Error('Gate 3 FAIL: weather.json contains duplicate StationId');
+          }
+          const withCoordinates = data.filter(x => x.Latitude != null && x.Longitude != null);
+          if (withCoordinates.length === 0) {
+            throw new Error('Gate 3 FAIL: weather.json contains no usable coordinates');
+          }
+          console.log('PASS: weather rows = ' + data.length);
+          console.log('PASS: unique StationId rows = ' + ids.length);
+          console.log('PASS: rows with coordinates = ' + withCoordinates.length);
+          "
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run Vitest
+        run: npm run test -- --run
+
+      - name: Vite production build
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          test -f dist/index.html
+          test -f dist/weather.json
+          echo "Gate 3 PASS: Vite production output exists."
