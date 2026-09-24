@@ -11,11 +11,10 @@ Describe "SQLiteHelper Tests" {
         $createSql = "CREATE TABLE test_table (id INT, name TEXT);"
         $insertSql = "INSERT INTO test_table VALUES (1, 'TestName');"
 
-        { Invoke-SqliteQuery -DatabasePath "$PSScriptRoot\test_db.sqlite" -Query $createSql } |
-            Should-NotThrow
-
-        { Invoke-SqliteQuery -DatabasePath "$PSScriptRoot\test_db.sqlite" -Query $insertSql } |
-            Should-NotThrow
+        # Pester 6 has no Should-NotThrow assertion.
+        # Execute the commands directly: any unexpected exception automatically fails this test.
+        Invoke-SqliteQuery -DatabasePath "$PSScriptRoot\test_db.sqlite" -Query $createSql
+        Invoke-SqliteQuery -DatabasePath "$PSScriptRoot\test_db.sqlite" -Query $insertSql
 
         (Test-Path "$PSScriptRoot\test_db.sqlite") | Should-BeTrue
     }
