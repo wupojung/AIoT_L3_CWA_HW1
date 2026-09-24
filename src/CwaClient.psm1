@@ -3,18 +3,26 @@ function Invoke-CwaRequest {
         [string]$DatasetId = "O-A0003-001",
         [string]$ApiKey
     )
+
     if ([string]::IsNullOrWhiteSpace($ApiKey)) {
         throw "API Key is required"
     }
 
     $uri = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/${DatasetId}?Authorization=${ApiKey}&format=JSON"
-    Write-Host "URI:" $uri
+    Write-Host "Fetching CWA dataset '$DatasetId'..."
+
     try {
         $response = Invoke-RestMethod -Uri $uri -Method Get -ErrorAction Stop
         return $response
     }
     catch {
-        throw "Failed to fetch CWA API: $_"
+        # Avoid leaking the API key if an HTTP exception includes the request URI.
+        $errorMessage = $_.Exception.Message
+        if (-not [string]::IsNullOrEmpty($ApiKey)) {
+            $errorMessage = $errorMessage.Replace($ApiKey, "***")
+        }
+
+        throw "Failed to fetch CWA API: $errorMessage"
     }
 }
 
@@ -29,7 +37,7 @@ function ConvertFrom-CwaResponse {
     }
 
     $parsedStations = @()
-    
+
     $stationsRoot = $CwaResponse.records.Station
     if ($null -eq $stationsRoot) {
         return $parsedStations
@@ -42,7 +50,7 @@ function ConvertFrom-CwaResponse {
 
         $countyName = $station.GeoInfo.CountyName
         $townName = $station.GeoInfo.TownName
-        
+
         $lat = $null
         $lon = $null
         $wgs84 = $station.GeoInfo.Coordinates | Where-Object { $_.CoordinateName -eq "WGS84" }
@@ -55,8 +63,6 @@ function ConvertFrom-CwaResponse {
         $temp = $station.WeatherElement.AirTemperature
         $humidity = $station.WeatherElement.RelativeHumidity
 
-        # Handle edge cases where elements might be '-99' or empty.
-        
         $parsedStations += [PSCustomObject]@{
             StationId = $stationId
             StationName = $stationName
