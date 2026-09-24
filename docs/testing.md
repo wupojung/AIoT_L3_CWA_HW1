@@ -9,7 +9,7 @@ Testing 是 Five-Gate Workflow 的跨 Gate 品質要求，不是額外的 Gate�
 - 讓 Parser、Transformer、ETL、Domain Logic、Repository 可獨立驗證。
 - 讓 Bug Fix 有可重複的 regression evidence。
 - 讓 Gate PASS 建立在實際測試與驗證，而不是 Agent 的主觀判斷。
-- 讓 Gate 4 的 GitHub Actions 自動執行 deterministic checks。
+- 讓 GitHub Actions 從專案早期開始自動執行 deterministic checks。
 
 ## 2. Testing Principles
 
@@ -23,8 +23,84 @@ Testing 是 Five-Gate Workflow 的跨 Gate 品質要求，不是額外的 Gate�
 8. UI testing 保持 pragmatic，不追求不必要的高 coverage。
 9. GitHub Actions 必須執行可重複的 Automated Tests。
 10. PASS 必須有 Verification Evidence。
+11. Local 與 CI 必須執行同一套 tests，避免 test drift。
+12. CI 不等待 Gate 4 才開始；只要有 automated tests 就應納入 CI。
 
-## 3. Test Levels
+## 3. PowerShell / Pester Standard
+
+目前 Gate 1–2 的主要實作語言為 PowerShell，Automated Tests 統一使用 **Pester 6.2.0**。
+
+### Version Policy
+
+Local Development 與 GitHub Actions 使用相同版本：
+
+~~~text
+Pester 6.2.0
+~~~
+
+CI 必須明確安裝 / pin 此版本，不依賴 Runner 預載版本。
+
+### Assertion Syntax
+
+新的或修改過的 Tests 統一採用 Pester 6 推薦的 `Should-*` assertions：
+
+~~~powershell
+$result.Count | Should-Be 1
+$result[0].StationName | Should-Be "基隆"
+$true | Should-BeTrue
+{ Invoke-Something } | Should-Throw
+~~~
+
+不得再新增舊式：
+
+~~~powershell
+$result.Count | Should Be 1
+~~~
+
+Pester 5 classic syntax（例如 `Should -Be`）在 Pester 6 仍可執行，但本專案新程式碼統一採 `Should-*` 形式，避免不同世代語法混用。
+
+### Test File Convention
+
+PowerShell Tests 放置於：
+
+~~~text
+tests/
+~~~
+
+測試檔使用：
+
+~~~text
+*.Tests.ps1
+~~~
+
+例如：
+
+~~~text
+tests/
+├── CwaClient.Tests.ps1
+├── SQLiteHelper.Tests.ps1
+└── fixtures/
+~~~
+
+Test logic 不應直接寫入 GitHub Actions workflow。Workflow 只負責準備環境並執行 repository 內既有 tests。
+
+### Local Test Command
+
+Push 前應先執行：
+
+~~~powershell
+Invoke-Pester -Path ./tests -Output Detailed
+~~~
+
+CI 使用：
+
+~~~powershell
+Invoke-Pester -Path ./tests -CI -Output Detailed
+~~~
+
+`-CI` 必須在 tests failed 時讓 CI Job 回傳失敗。
+
+## 4. Test Levels
 
 ### Unit Tests
 
@@ -57,7 +133,7 @@ Testing 是 Five-Gate Workflow 的跨 Gate 品質要求，不是額外的 Gate�
 
 Gate 5 驗證 Production URL 的最小關鍵路徑。
 
-## 4. Component Testing Strategy
+## 5. Component Testing Strategy
 
 | Component | Primary Test | Notes |
 | --- | --- | --- |
@@ -71,7 +147,7 @@ Gate 5 驗證 Production URL 的最小關鍵路徑。
 | GIS UI | Basic integration/manual | 不測 library internals |
 | Deployment | Smoke | Production critical path |
 
-## 5. API Client Testing
+## 6. API Client Testing
 
 Unit Test 可涵蓋：
 
@@ -83,7 +159,7 @@ Unit Test 可涵蓋：
 
 真實 CWA API 驗證不可由 fake data 取代。
 
-## 6. Parser Testing
+## 7. Parser Testing
 
 Parser 是本專案最重要的 Unit Test target 之一。
 
@@ -97,7 +173,7 @@ Parser 是本專案最重要的 Unit Test target 之一。
 
 在 Gate 1 取得真實 response 前，不先建立假的 CWA schema test。
 
-## 7. Transformer / Domain Testing
+## 8. Transformer / Domain Testing
 
 Transformer 應以明確 Input → Expected Output 驗證。
 
@@ -109,7 +185,7 @@ Transformer 應以明確 Input → Expected Output 驗證。
 
 讓 transformation rule 可以快速、穩定地執行。
 
-## 8. Database / Repository Testing
+## 9. Database / Repository Testing
 
 Repository tests 使用 isolated temporary SQLite。
 
@@ -123,7 +199,9 @@ Repository tests 使用 isolated temporary SQLite。
 
 測試不得寫入開發者正式 local database。
 
-## 9. ETL Testing
+目前 `SQLiteHelper.psm1` 使用 Windows `winsqlite3.dll`，因此 PowerShell / SQLite CI tests 暫時使用 `windows-latest` runner。未來若 SQLite abstraction 改為 cross-platform implementation，再重新評估 runner。
+
+## 10. ETL Testing
 
 建議測試邊界：
 
@@ -141,7 +219,7 @@ Expected Query Result
 
 另外保留真實 CWA → ETL → SQLite 的 Integration Verification。
 
-## 10. Test Data Strategy
+## 11. Test Data Strategy
 
 - Production：真實 CWA data。
 - Unit Tests：sanitized fixtures / mocks。
@@ -150,7 +228,7 @@ Expected Query Result
 
 Mock 的用途是隔離測試，不是取代正式 CWA Integration。
 
-## 11. Bug Fix Rule
+## 12. Bug Fix Rule
 
 遇到可重現 Bug 時，優先流程：
 
@@ -170,22 +248,77 @@ Run Regression Tests
 
 如果 Bug 不適合 automated test，至少留下明確 manual verification procedure。
 
-## 12. CI Testing
+## 13. Continuous Integration Policy
 
-Gate 4 的 GitHub Actions 最低必須執行：
+CI 從專案早期開始，不等待 Gate 4。
 
 ~~~text
-Install Dependencies
-→ Lint
-→ Automated Tests
-→ Build
+Gate 1 Tests
+      ↓
+      CI
+      ↓
+Gate 2 Tests
+      ↓
+      CI
+      ↓
+Gate 3 Tests
+      ↓
+      CI
 ~~~
 
-在技術棧尚未選定前，不猜 runtime-specific command。
+Gate 4 的角色是 **CI Hardening / Final Repository Verification**，不是第一次建立 CI。
 
-Real CWA Integration Test 不建議每次 push 都執行，避免 external outage、rate limit 與 secret dependency 讓 deterministic CI 不穩定。可在 Gate verification、manual run 或後續 scheduled workflow 執行。
+目前 Gate 2 階段最低 CI Scope：
 
-## 13. Gate Verification Evidence
+~~~text
+Repository Baseline Checks
++
+CwaClient Pester Tests
++
+SQLiteHelper Pester Tests
+~~~
+
+之後依實際技術棧逐步加入：
+
+- ETL tests
+- Application logic tests
+- Lint
+- Build
+- GIS / Web tests
+
+### Real CWA API and CI
+
+每次 Push 的 deterministic CI 不直接依賴真實 CWA API，以避免 network outage、rate limit、API availability 或 Secret dependency 造成不穩定。
+
+日常 CI 使用 sanitized fixtures / mocks。
+
+真實 CWA API Request 屬於 Integration Verification，可由 Gate Verification、Manual Run 或後續 Dedicated / Scheduled Workflow 執行。
+
+## 14. CI PASS Rule
+
+~~~text
+Source Code
+    ↓
+Local Pester
+    ↓
+Commit / Push
+    ↓
+GitHub Actions
+    ↓
+Pester CI
+    ↓
+PASS / FAIL
+~~~
+
+Automated Test FAIL 時：
+
+~~~text
+CI = FAIL
+~~~
+
+不得透過刪除 failing test、降低 assertion、skip required test 或只修改 README 狀態取得假性綠燈。
+
+## 15. Gate Verification Evidence
 
 Gate PASS 的 evidence 可以包含：
 
@@ -201,7 +334,7 @@ Gate PASS 的 evidence 可以包含：
 - "looks correct"
 - "implementation complete"
 
-## 14. What We Will Not Test
+## 16. What We Will Not Test
 
 目前不主動測試：
 
