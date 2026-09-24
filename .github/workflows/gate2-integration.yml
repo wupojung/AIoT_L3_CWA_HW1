@@ -6,7 +6,11 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/gate2-integration.yml
+      - "src/CwaClient.psm1"
+      - "src/Run-Etl.ps1"
+      - "src/SQLiteHelper.psm1"
+      - "src/schema.sql"
+      - ".github/workflows/gate2-integration.yml"
 
 permissions:
   contents: read
