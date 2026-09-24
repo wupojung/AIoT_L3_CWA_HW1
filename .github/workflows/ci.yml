@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required project files
+        run: |
+          test -f README.md
+          test -f myplan/workflow.md
+          test -f docs/architecture.md
+          test -f docs/testing.md
+          test -f .env.example
+          test -f .gitignore
+
+      - name: Verify .env is not tracked
+        run: |
+          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo "ERROR: .env must not be tracked."
+            exit 1
+          fi
+
+      - name: Verify CWA secret placeholder
+        run: |
+          grep -q '^CWA_API_KEY=<YOUR_CWA_API_KEY>$' .env.example
+
+      - name: Runtime-specific CI status
+        run: |
+          echo "Repository baseline checks passed."
+          echo "Lint, automated tests, and build steps will be added when the actual runtime/toolchain is selected."
+          echo "Gate 4 cannot PASS until those project-specific checks are enabled and green."
