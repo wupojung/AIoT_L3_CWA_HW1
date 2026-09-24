@@ -4,16 +4,11 @@ Describe "PowerShell Syntax Tests" {
 
     foreach ($file in $sourceFiles) {
         It "Parses $($file.Name) without syntax errors" {
-            $tokens = $null
-            $parseErrors = $null
+            $source = Get-Content $file.FullName -Raw -Encoding UTF8
 
-            [System.Management.Automation.Language.Parser]::ParseFile(
-                $file.FullName,
-                [ref]$tokens,
-                [ref]$parseErrors
-            ) | Out-Null
-
-            $parseErrors.Count | Should-Be 0
+            # ScriptBlock.Create parses the source without executing it.
+            # Any PowerShell syntax error throws and automatically fails this test.
+            [scriptblock]::Create($source) | Out-Null
         }
     }
 }
