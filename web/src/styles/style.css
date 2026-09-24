@@ -1,0 +1,182 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #111;
+    color: #eee;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Glassmorphism Header */
+.app-header {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    z-index: 1000;
+    background: rgba(25, 25, 25, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 16px 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: none; /* Let clicks pass through */
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-subtitle {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-top: 4px;
+    font-weight: 300;
+}
+
+/* Overlay & Loading */
+.overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    border-top-color: #00f2fe;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 24px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.message {
+    font-size: 1.2rem;
+    color: #e0e0e0;
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+/* Customizing Leaflet Popups */
+.leaflet-popup-content-wrapper {
+    background: rgba(30, 30, 30, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    color: #fff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    padding: 6px !important;
+}
+
+.leaflet-popup-tip {
+    background: rgba(30, 30, 30, 0.8) !important;
+}
+
+.leaflet-popup-close-button {
+    color: #aaa !important;
+    margin-top: 4px !important;
+    margin-right: 4px !important;
+}
+.leaflet-popup-close-button:hover {
+    color: #fff !important;
+}
+
+.weather-popup {
+    font-size: 13px;
+    line-height: 1.5;
+    min-width: 180px;
+}
+
+.weather-popup h3 {
+    margin: 0 0 12px 0;
+    color: #4facfe;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    padding-bottom: 8px;
+    font-weight: 600;
+    font-size: 1.15rem;
+}
+
+.weather-popup p {
+    margin: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.weather-popup strong {
+    color: #999;
+    font-weight: 400;
+}
+
+/* Custom Map Markers */
+.temp-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    border: 2px solid rgba(255,255,255,0.8);
+    transition: transform 0.2s ease, z-index 0s;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.temp-marker:hover {
+    transform: scale(1.15);
+    z-index: 1000 !important;
+}
+
+/* Tweak Leaflet controls for dark theme */
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+.leaflet-bar a {
+    background: rgba(40,40,40,0.8) !important;
+    color: #ccc !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-color: rgba(255,255,255,0.1) !important;
+    transition: all 0.2s;
+}
+.leaflet-bar a:hover {
+    background: rgba(60,60,60,0.95) !important;
+    color: #fff !important;
+}
