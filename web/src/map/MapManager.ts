@@ -2,10 +2,13 @@ import L from 'leaflet';
 import { WeatherObservation } from '../domain/WeatherObservation';
 import {
     DataLayer,
+    Lang,
     normalizeValue,
     getTempColor,
     getHumidityColor,
     getWeatherSymbol,
+    getWindSpeedColor,
+    getPrecipitationColor,
     buildPopupHtml,
 } from '../domain/WeatherClassifier';
 
@@ -53,8 +56,11 @@ export class MapManager {
     private temperatureLayer: L.LayerGroup = L.layerGroup();
     private humidityLayer: L.LayerGroup = L.layerGroup();
     private weatherLayer: L.LayerGroup = L.layerGroup();
+    private windSpeedLayer: L.LayerGroup = L.layerGroup();
+    private precipitationLayer: L.LayerGroup = L.layerGroup();
 
     private activeDataLayer: DataLayer = 'temperature';
+    private currentLang: Lang = 'en';
     private observations: WeatherObservation[] = [];
 
     constructor(private elementId: string) {}
@@ -94,11 +100,19 @@ export class MapManager {
         this.activeDataLayer = layer;
 
         // Single-active-layer model: remove all, add only the selected one
-        const all = [this.temperatureLayer, this.humidityLayer, this.weatherLayer];
+        const all = [this.temperatureLayer, this.humidityLayer, this.weatherLayer, this.windSpeedLayer, this.precipitationLayer];
         all.forEach(lg => {
             if (this.map!.hasLayer(lg)) this.map!.removeLayer(lg);
         });
         this.layerGroupFor(layer).addTo(this.map);
+    }
+    
+    setLanguage(lang: Lang) {
+        this.currentLang = lang;
+        // Re-render layers to update popup language
+        if (this.observations.length > 0) {
+            this.renderObservations(this.observations);
+        }
     }
 
     getActiveDataLayer(): DataLayer {
@@ -123,6 +137,8 @@ export class MapManager {
         this.buildTemperatureLayer(observations);
         this.buildHumidityLayer(observations);
         this.buildWeatherLayer(observations);
+        this.buildWindSpeedLayer(observations);
+        this.buildPrecipitationLayer(observations);
 
         // Re-apply active layer to ensure it is visible
         this.setDataLayer(this.activeDataLayer);
@@ -135,6 +151,8 @@ export class MapManager {
             case 'temperature': return this.temperatureLayer;
             case 'humidity':    return this.humidityLayer;
             case 'weather':     return this.weatherLayer;
+            case 'windSpeed':   return this.windSpeedLayer;
+            case 'precipitation': return this.precipitationLayer;
         }
     }
 
@@ -163,7 +181,7 @@ export class MapManager {
                 `<div class="temp-marker" style="background-color:${color}">${label}</div>`
             );
             L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs), { maxWidth: 260 })
+                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
                 .addTo(this.temperatureLayer);
         });
     }
@@ -183,7 +201,7 @@ export class MapManager {
                 `<div class="hum-marker" style="background-color:${color}">${label}</div>`
             );
             L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs), { maxWidth: 260 })
+                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
                 .addTo(this.humidityLayer);
         });
     }
@@ -205,8 +223,48 @@ export class MapManager {
                 popupAnchor: [0, -17],
             });
             L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs), { maxWidth: 260 })
+                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
                 .addTo(this.weatherLayer);
+        });
+    }
+
+    private buildWindSpeedLayer(observations: WeatherObservation[]) {
+        this.windSpeedLayer.clearLayers();
+        observations.forEach(obs => {
+            const lat = Number(obs.Latitude);
+            const lon = Number(obs.Longitude);
+            if (isNaN(lat) || isNaN(lon)) return;
+
+            const speed = normalizeValue(obs.WindSpeed);
+            const label = speed !== null ? `${speed}` : '--';
+            const color = speed !== null ? getWindSpeedColor(speed) : '#64748B';
+
+            const icon = this.makeIcon(
+                `<div class="wind-marker" style="background-color:${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: #1e293b; font-weight: 600; font-size: 11px;">${label}</div>`
+            );
+            L.marker([lat, lon], { icon })
+                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
+                .addTo(this.windSpeedLayer);
+        });
+    }
+
+    private buildPrecipitationLayer(observations: WeatherObservation[]) {
+        this.precipitationLayer.clearLayers();
+        observations.forEach(obs => {
+            const lat = Number(obs.Latitude);
+            const lon = Number(obs.Longitude);
+            if (isNaN(lat) || isNaN(lon)) return;
+
+            const precip = normalizeValue(obs.Precipitation);
+            const label = precip !== null ? `${precip}` : '--';
+            const color = precip !== null ? getPrecipitationColor(precip) : '#64748B';
+
+            const icon = this.makeIcon(
+                `<div class="precip-marker" style="background-color:${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 11px; box-shadow: 0 1px 3px rgba(0,0,0,0.5);">${label}</div>`
+            );
+            L.marker([lat, lon], { icon })
+                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
+                .addTo(this.precipitationLayer);
         });
     }
 }
