@@ -81,14 +81,16 @@ See [Technology Stack](docs/tech_stack.md) and [Technology Decisions](docs/techn
 | Version | Direction | Status |
 | --- | --- | --- |
 | **v1.0.0** | CARTO Dark / Light baseline | Current |
-| **v1.1.0** | CARTO no-label + custom Traditional Chinese labels | Planned |
-| **v1.2.0** | MapTiler Dark + Traditional Chinese labels | Planned |
+| **v1.1.0** | Complete O-A0003 observation model + bilingual GIS UI | Next |
+| **v1.2.0** | CARTO no-label + custom Traditional Chinese labels | Planned |
+| **v1.3.0** | MapTiler Dark + Traditional Chinese labels | Planned |
 
-See [CHANGELOG.md](CHANGELOG.md) for release history.
+See [v1.1.0 Release Plan](docs/releases/v1.1.0.md) for the next development cycle and [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
+- [v1.1.0 Release Plan](docs/releases/v1.1.0.md)
 - [Architecture](docs/architecture.md)
 - [Technology Stack](docs/tech_stack.md)
 - [Testing Strategy](docs/testing.md)

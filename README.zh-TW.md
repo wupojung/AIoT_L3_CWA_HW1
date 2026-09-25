@@ -81,14 +81,16 @@ npm run dev
 | Version | Direction | Status |
 | --- | --- | --- |
 | **v1.0.0** | CARTO Dark / Light baseline | Current |
-| **v1.1.0** | CARTO no-label + 自製繁體中文標籤 | Planned |
-| **v1.2.0** | MapTiler Dark + Traditional Chinese labels | Planned |
+| **v1.1.0** | 完整 O-A0003 觀測資料模型 + 英文／繁中 GIS UI | Next |
+| **v1.2.0** | CARTO no-label + 自製繁體中文標籤 | Planned |
+| **v1.3.0** | MapTiler Dark + Traditional Chinese labels | Planned |
 
-版本歷史請參考 [CHANGELOG.md](CHANGELOG.md)。
+下一階段請參考 [v1.1.0 開發規劃](docs/releases/v1.1.0.zh-TW.md)，版本歷史請參考 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 文件
 
 - [詳細啟動指南](docs/getting-started.zh-TW.md)
+- [v1.1.0 開發規劃](docs/releases/v1.1.0.zh-TW.md)
 - [Architecture](docs/architecture.md)
 - [Technology Stack](docs/tech_stack.md)
 - [Testing Strategy](docs/testing.md)

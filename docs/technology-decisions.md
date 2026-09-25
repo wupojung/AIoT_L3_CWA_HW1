@@ -893,3 +893,87 @@ Templates:
 ### Consequence
 
 The documented local setup now matches how PowerShell and Vite actually resolve environment variables.
+
+
+---
+
+## TD-024 — v1.1 Preserves the Full O-A0003 Observation Contract
+
+**Status:** Planned  
+**Target:** v1.1.0
+
+### Finding
+
+v1.0.0 currently persists only station identity, location, weather, temperature, and humidity. The verified O-A0003-001 station schema also provides altitude, administrative codes, visibility, sunshine duration, precipitation, wind, pressure, UV, maximum 10-minute wind, gust information, and daily temperature extremes.
+
+### Decision
+
+v1.1.0 will preserve all application-relevant fields present in the verified current O-A0003-001 station response contract instead of discarding them during parsing.
+
+"All fields" means the verified schema, not blindly persisting unknown future JSON properties.
+
+### Gate Impact
+
+The parser contract changes first:
+
+```text
+Gate 1 → Gate 2 → Gate 3 → Gate 4 → Gate 5
+```
+
+---
+
+## TD-025 — v1.1 Uses a Bilingual Product UI
+
+**Status:** Planned  
+**Target:** v1.1.0
+
+### Decision
+
+The GIS UI supports:
+
+```text
+English
+Traditional Chinese (zh-TW)
+```
+
+Use a small typed TypeScript translation dictionary rather than adding a large i18n framework.
+
+Localization covers titles, layer names, legends, station detail labels, states, date/time formatting, and the language selector. Raw observation values remain separate from localized presentation.
+
+### README Parity Rule
+
+Whenever either root README changes, the same documentation batch must review both:
+
+```text
+README.md
+README.zh-TW.md
+```
+
+They do not need word-for-word translation, but current release, roadmap, Quick Start, Gate status, Live Demo, License, and documentation links must remain equivalent.
+
+---
+
+## TD-026 — Complete Storage, Selective Visualization
+
+**Status:** Planned  
+**Target:** v1.1.0
+
+### Decision
+
+Complete data storage and map density are separate concerns.
+
+Primary spatial layers:
+
+```text
+Temperature
+Humidity
+Precipitation
+Wind
+Pressure
+UV Index
+Weather
+```
+
+Detailed/contextual fields such as visibility, sunshine, altitude, codes, gust details, max 10-minute wind, daily extremes, and occurrence times belong in Station Detail.
+
+This preserves data completeness without turning the map into an unreadable dashboard.

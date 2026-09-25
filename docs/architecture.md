@@ -195,92 +195,63 @@ Basemap provider / OpenStreetMap attribution 必須持續顯示，不因 UI 美�
 
 ---
 
-## 7. Basemap & Localization Evolution
+## 7. Release Evolution
 
-### v1.0.0 — CARTO Raster
-
-目前使用：
+### v1.0.0 — Current Baseline
 
 ```text
-dark_all
-light_all
+Vite + TypeScript + Leaflet
++
+CARTO dark_all / light_all
++
+Reduced O-A0003 observation model
 ```
 
-優點：
+### v1.1.0 — Complete Observation Model + Bilingual GIS
 
-- Leaflet integration 簡單。
-- Dark Matter 適合 weather data overlay。
-- 不需要額外 GIS SDK。
+```text
+O-A0003-001
+   ↓
+Expanded Parser
+   ↓
+Expanded SQLite Schema
+   ↓
+Expanded weather.json
+   ↓
+Typed WeatherObservation
+   ↓
+English / zh-TW Presentation
+   ↓
+Leaflet GIS
+```
 
-已知限制：
+Primary map layers: Temperature, Humidity, Precipitation, Wind, Pressure, UV Index, Weather.
 
-- Raster labels 已畫進 PNG tile。
-- 目前 labels 主要呈現英文。
-- Leaflet client 無法直接將既有 raster labels 切換成 `zh-TW`。
+Remaining fields are organized in Station Detail groups: Current Conditions, Wind, Today, and Station.
 
-### v1.1.0 — Planned: CARTO no-label + 自製繁中標籤
+Because Parser + SQLite + JSON + UI change, v1.1.0 re-enters from Gate 1.
 
-預計改為：
+### v1.2.0 — CARTO no-label + Custom Traditional Chinese Map Labels
 
 ```text
 CARTO dark_nolabels / light_nolabels
-        +
++
 Custom Taiwan Traditional Chinese Labels
 ```
 
-目標：
+Revalidation: Gate 3 → Gate 4 → Gate 5.
 
-- 保留 Leaflet / CARTO 架構。
-- 自行控制台灣縣市與重要區域中文標籤。
-- 不追求完整道路 / POI 中文化。
-- 降低 map label 對 weather visualization 的視覺干擾。
-
-最早受影響 Gate：
-
-```text
-Gate 3
-```
-
-因此 release verification：
-
-```text
-Gate 3 → Gate 4 → Gate 5
-```
-
-### v1.2.0 — Planned: MapTiler Dark + Traditional Chinese
-
-預計評估：
+### v1.3.0 — MapTiler Dark + Traditional Chinese
 
 ```text
 Leaflet
-  +
++
 MapTiler Dark / Dataviz Dark
-  +
++
 Traditional Chinese language
 ```
 
-MapTiler Leaflet integration 支援 map language，SDK 提供 `Language.TRADITIONAL_CHINESE`。
-
-預期優點：
-
-- 原生多語系 labels。
-- Dark data-visualization basemap。
-- 降低自製 labels 的維護成本。
-
-預期代價：
-
-- 新 provider dependency。
-- 新 client-side API key。
-- 新 environment configuration。
-- attribution / fallback / deployment 需重新驗證。
-
-此版本同樣從 Gate 3 重新驗證。
-
-官方參考：
-
-- CARTO Basemaps: https://www.carto.com/basemaps/
-- MapTiler Leaflet language: https://docs.maptiler.com/leaflet/examples/map-language/
-- MapTiler Language API: https://docs.maptiler.com/sdk-js/api-reference/variables/Language/
+Revalidation: Gate 3 → Gate 4 → Gate 5.
 
 ---
 
@@ -353,8 +324,9 @@ Release
 
 | Version Change | Earliest Gate | Revalidation |
 |---|---|---|
-| v1.1 自製繁中 labels | Gate 3 | Gate 3 → 4 → 5 |
-| v1.2 MapTiler + zh-Hant | Gate 3 | Gate 3 → 4 → 5 |
+| v1.1 完整 O-A0003 model + bilingual UI | Gate 1 | Gate 1 → 2 → 3 → 4 → 5 |
+| v1.2 自製繁中 map labels | Gate 3 | Gate 3 → 4 → 5 |
+| v1.3 MapTiler + zh-Hant | Gate 3 | Gate 3 → 4 → 5 |
 | 未來改 forecast dataset | Gate 1 | Gate 1 → 2 → 3 → 4 → 5 |
 
 ---

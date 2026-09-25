@@ -57,6 +57,18 @@ web/
 ### v1.1.0
 
 ```text
+Expanded O-A0003 parser / SQLite / JSON contract
++
+English / Traditional Chinese product UI
++
+Additional GIS metric layers
+```
+
+v1.1 changes the parser contract and re-enters verification from Gate 1.
+
+### v1.2.0
+
+```text
 Leaflet
 +
 CARTO no-label raster
@@ -64,7 +76,7 @@ CARTO no-label raster
 Custom Taiwan Traditional Chinese labels
 ```
 
-### v1.2.0
+### v1.3.0
 
 ```text
 Leaflet
@@ -74,7 +86,7 @@ MapTiler Dark / Dataviz Dark
 Traditional Chinese labels
 ```
 
-Both changes affect the GIS layer and therefore re-enter verification from Gate 3.
+v1.2 and v1.3 affect the GIS layer and re-enter verification from Gate 3.
 
 ## Historical Note
 

@@ -16,68 +16,45 @@ MAJOR.MINOR.PATCH
 
 ## [Unreleased]
 
-目前規劃中的後續版本。
-
-### Documentation / Governance
-
-- Refactored the project landing page into a concise English-first README with a Traditional Chinese companion (`README.zh-TW.md`).
-- Moved full startup, environment, testing, and build instructions into localized Getting Started guides.
-- Replaced the outdated `docs/tech_stack.md` baseline with the current v1.0.0 technology stack.
-- Split environment templates by runtime: root `.env.example` for CWA ETL and `web/.env.example` for Vite / CARTO.
-
-- README 頂部增加 Live Demo、Release 與 MIT License badges。
-- Development Status 將 Gate decision 統一顯示為固定 `✅ PASS`，workflow / production evidence 移至獨立 Evidence 欄。
-- 新增標準 MIT `LICENSE`，明確區分 project-owned code/docs 與第三方資料 / map services。
-- 新增 documentation-only batching rule：ChatGPT / IDE Agent 應將同一輪文件修改集中成單一 consolidated commit / push，避免不必要的 GitHub Actions runs。
-
 ### Planned — v1.1.0
 
-**主題：CARTO no-label basemap + 自製繁體中文標籤**
+**Theme: Complete O-A0003 observation model + bilingual GIS**
 
-目標：
+v1.1.0 expands the reduced v1.0 data contract so verified O-A0003-001 station fields are preserved through Parser → SQLite → JSON and presented through an English / Traditional Chinese GIS.
 
-- 保留目前 Vite + TypeScript + Leaflet 架構。
-- 保留 CARTO 作為 basemap provider。
-- 將 CARTO `dark_all / light_all` 改為 no-label variant。
-- 由本專案自行建立 Taiwan Traditional Chinese labels overlay。
-- 優先標示台灣縣市 / 重要區域，不追求完整道路與地名資料。
-- 保留 CARTO / OpenStreetMap attribution。
-- 新增 label overlay 的 deterministic tests 與 Manual GIS Verification。
-
-預計重新進入：
+Primary map layers:
 
 ```text
-Gate 3
-  ↓
-Gate 4
-  ↓
-Gate 5
+Temperature
+Humidity
+Precipitation
+Wind
+Pressure
+UV Index
+Weather
 ```
 
-Gate 1 / Gate 2 若資料來源與 ETL 未改動，可沿用 v1.0.0 已驗證 evidence。
+Full station metadata, visibility, sunshine duration, gust information, maximum 10-minute wind, and daily high / low temperatures will be available in a structured Station Detail panel.
+
+Because the parser, database schema, JSON contract, and GIS UI all change, this release re-enters from Gate 1:
+
+```text
+Gate 1 → Gate 2 → Gate 3 → Gate 4 → Gate 5
+```
+
+See `docs/releases/v1.1.0.md` and `docs/releases/v1.1.0.zh-TW.md`.
 
 ### Planned — v1.2.0
 
-**主題：MapTiler Dark + Traditional Chinese labels**
+**Theme: CARTO no-label + custom Traditional Chinese map labels**
 
-目標：
+The former v1.1 localization roadmap moves to v1.2.0.
 
-- 評估 MapTiler dark / data-visualization style。
-- 使用 MapTiler Leaflet integration。
-- 使用 Traditional Chinese language mode（`Language.TRADITIONAL_CHINESE` / zh-Hant concept）。
-- 驗證 client-side API key 的 domain/referrer restriction 與部署設定。
-- 重新確認 attribution、fallback、error handling 與 mobile rendering。
-- 比較 CARTO 自製中文標籤與 MapTiler 原生多語系標籤的可維護性與視覺品質。
+### Planned — v1.3.0
 
-此版本屬於 GIS / basemap architecture change，因此預計重新執行：
+**Theme: MapTiler Dark + native Traditional Chinese labels**
 
-```text
-Gate 3
-  ↓
-Gate 4
-  ↓
-Gate 5
-```
+The former v1.2 MapTiler roadmap moves to v1.3.0.
 
 ---
 

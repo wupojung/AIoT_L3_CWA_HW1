@@ -58,6 +58,7 @@ FAIL → FIX → TEST AGAIN
 14. 文件修改 batching 的目的，是避免每次 push 都觸發 GitHub Actions，造成不必要的 CI run、等待時間與運算資源消耗。例外僅限：使用者明確要求立即驗證、security / secret fix、或該變更需要獨立保留 verification evidence。
 15. `README.md` 為預設英文專案首頁；繁體中文使用 `README.zh-TW.md`。兩份 README 的核心功能、版本、Quick Start、Gate Status、文件連結與 License 必須保持一致。
 16. README 只保留專案首頁需要的摘要與最短 Quick Start；完整 setup、environment、testing、build instructions 放入 `docs/getting-started*.md`，避免 README 膨脹成操作手冊。
+17. 任何修改 `README.md` 或 `README.zh-TW.md` 的工作，都必須在同一個 documentation batch 中同步檢查另一語系版本；不得讓 release、roadmap、Quick Start、Gate Status、Live Demo、License 或 documentation links 發生 language drift。
 
 ## 3. Versioned Release / Gate Re-entry Policy
 
@@ -93,7 +94,23 @@ New Release
 
 ### Examples
 
-v1.1.0：CARTO no-label + 自製繁體中文標籤：
+v1.1.0：完整 O-A0003 observation contract + English / Traditional Chinese GIS：
+
+~~~text
+Gate 1
+  ↓
+Gate 2
+  ↓
+Gate 3
+  ↓
+Gate 4
+  ↓
+Gate 5
+~~~
+
+Dataset ID 雖然不變，但 Parser contract、SQLite schema、Static JSON 與 GIS UI 都會擴充，因此最早受影響 Gate 是 Gate 1。
+
+v1.2.0：CARTO no-label + 自製繁體中文 map labels：
 
 ~~~text
 Gate 3
@@ -103,9 +120,7 @@ Gate 4
 Gate 5
 ~~~
 
-Gate 1 / Gate 2 若 CWA dataset、Parser、ETL、SQLite data contract 未變更，可沿用既有 evidence。
-
-v1.2.0：MapTiler Dark + Traditional Chinese labels：
+v1.3.0：MapTiler Dark + Traditional Chinese labels：
 
 ~~~text
 Gate 3
@@ -115,7 +130,7 @@ Gate 4
 Gate 5
 ~~~
 
-因 basemap provider / frontend GIS integration 改變，必須重新執行 Gate 3 的 automated + manual GIS verification，並重新驗證 CI 與 Production。
+v1.2 / v1.3 主要修改 frontend GIS / basemap integration，因此從 Gate 3 重新執行 automated + manual GIS verification，並重新驗證 CI 與 Production。
 
 若未來改用新的 CWA forecast dataset：
 
