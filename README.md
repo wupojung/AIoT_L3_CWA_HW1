@@ -14,7 +14,7 @@ The project uses a PowerShell + SQLite data pipeline and a Vite + TypeScript + L
 
 ## System Preview
 
-[![TW Sky system preview](docs/assets/tw-sky-system-preview.webp)](https://twsky.vercel.app/)
+[![TW Sky system preview](docs/assets/tw-sky-system-preview.png)](https://twsky.vercel.app/)
 
 
 ## Highlights

@@ -14,7 +14,7 @@
 
 ## 系統預覽
 
-[![TW Sky 系統預覽](docs/assets/tw-sky-system-preview.webp)](https://twsky.vercel.app/)
+[![TW Sky 系統預覽](docs/assets/tw-sky-system-preview.png)](https://twsky.vercel.app/)
 
 
 ## 專案特色
