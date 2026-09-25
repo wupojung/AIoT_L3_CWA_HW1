@@ -29,6 +29,7 @@
         <div class="header-meta">
           <span id="station-count" class="header-badge"></span>
           <span id="last-updated" class="header-badge"></span>
+          <button id="lang-toggle" class="header-badge" style="cursor:pointer; background-color:#3b82f6; border:none; color:white; font-family:inherit;">🇹🇼 中文</button>
         </div>
       </header>
 
@@ -36,43 +37,52 @@
       <aside id="layer-panel" class="layer-panel" aria-label="Layer controls">
 
         <div class="panel-header">
-          <span class="panel-title">Layers</span>
+          <span class="panel-title" id="ui-label-layers">Layers</span>
         </div>
 
         <!-- Base Map section -->
         <div class="panel-section">
-          <div class="panel-section-label">BASE MAP</div>
-          <label class="radio-row" id="basemap-dark-label">
+          <div class="panel-section-label" id="ui-label-basemap">BASE MAP</div>
+          <div class="theme-switch-wrapper">
             <input type="radio" name="basemap" id="basemap-dark" value="dark" checked aria-label="Dark basemap" />
-            <span class="radio-dot"></span>
-            Dark
-          </label>
-          <label class="radio-row" id="basemap-light-label">
+            <label for="basemap-dark" class="theme-switch-label" id="ui-label-dark">Dark</label>
+            
             <input type="radio" name="basemap" id="basemap-light" value="light" aria-label="Light basemap" />
-            <span class="radio-dot"></span>
-            Light
-          </label>
+            <label for="basemap-light" class="theme-switch-label" id="ui-label-light">Light</label>
+            
+            <div class="theme-switch-slider"></div>
+          </div>
         </div>
 
         <div class="panel-divider"></div>
 
         <!-- Data Layer section -->
         <div class="panel-section">
-          <div class="panel-section-label">DATA LAYER</div>
+          <div class="panel-section-label" id="ui-label-datalayer">DATA LAYER</div>
           <label class="radio-row" id="layer-temp-label">
             <input type="radio" name="datalayer" id="layer-temp" value="temperature" checked aria-label="Temperature layer" />
             <span class="radio-dot"></span>
-            🌡 Temperature
+            <span id="ui-label-temp">🌡 Temperature</span>
           </label>
           <label class="radio-row" id="layer-hum-label">
             <input type="radio" name="datalayer" id="layer-hum" value="humidity" aria-label="Humidity layer" />
             <span class="radio-dot"></span>
-            💧 Humidity
+            <span id="ui-label-hum">💧 Humidity</span>
           </label>
           <label class="radio-row" id="layer-wx-label">
             <input type="radio" name="datalayer" id="layer-wx" value="weather" aria-label="Weather condition layer" />
             <span class="radio-dot"></span>
-            ⛅ Weather
+            <span id="ui-label-wx">⛅ Weather</span>
+          </label>
+          <label class="radio-row" id="layer-wind-label">
+            <input type="radio" name="datalayer" id="layer-wind" value="windSpeed" aria-label="Wind speed layer" />
+            <span class="radio-dot"></span>
+            <span id="ui-label-wind">💨 Wind Speed</span>
+          </label>
+          <label class="radio-row" id="layer-precip-label">
+            <input type="radio" name="datalayer" id="layer-precip" value="precipitation" aria-label="Precipitation layer" />
+            <span class="radio-dot"></span>
+            <span id="ui-label-precip">☔ Precipitation</span>
           </label>
         </div>
 
