@@ -7,181 +7,359 @@
 - 足夠專業但不過度工程化。
 - Business / transformation logic 可獨立測試。
 - External API、data transformation、persistence、UI responsibility 分離。
-- 技術選擇只在需求出現時做，不為了形式加入額外 layer。
+- Production deployment 保持簡單、可重現。
+- 技術決策可隨版本演進，但每次變更都必須重新通過受影響 Gate。
+
+目前 baseline release：
+
+```text
+v1.0.0
+```
+
+版本歷史請見 [CHANGELOG.md](../CHANGELOG.md)，完整技術決策請見 [technology-decisions.md](technology-decisions.md)。
+
+---
 
 ## 2. System Context
 
-~~~text
+```text
 CWA Open Data
+      ↓
+PowerShell Data Pipeline
+      ↓
+Static Weather Dataset
       ↓
 Taiwan Weather GIS Web
       ↓
 End User
-~~~
+```
 
-外部依賴目前只有必要的 CWA Data Source、GIS/Web runtime 與 deployment platform。
+目前 production URL：
 
-## 3. Data Flow
+https://twsky.vercel.app/
 
-目標資料流：
+---
 
-~~~text
-CWA API
+## 3. Current Data Flow — v1.0.0
+
+```text
+CWA API (O-A0003-001)
    ↓
-API Client
+API Client / Parser
    ↓
-Parser
-   ↓
-Transformer / Domain Logic
-   ↓
-Repository
+PowerShell ETL
    ↓
 SQLite
    ↓
-Application Logic
+Export-WeatherJson.ps1
    ↓
-Taiwan GIS UI
+web/public/weather.json
    ↓
-Vercel Deployment
-~~~
+Vite + TypeScript
+   ↓
+Leaflet
+   ↓
+CARTO Raster Basemap
+   ↓
+Vercel Static Deployment
+```
 
-實際 API Schema 必須先由 Gate 1 的真實 Response 驗證。
+`O-A0003-001` 是 **Current Weather Observation（目前天氣觀測）**，不是 forecast dataset。
+
+---
 
 ## 4. Core Components
 
 ### CWA API
 
-- Responsibility：提供真實中央氣象署 Open Data。
-- Input：HTTP request + authorization。
-- Output：真實 API response。
+- 提供中央氣象署真實 Open Data。
+- CWA API Key 只存在 local environment / GitHub Actions secret。
+- Browser 不直接呼叫 CWA API。
 
-### API Client
+### API Client / Parser
 
-- Responsibility：HTTP request、status/error handling。
-- Input：request parameters / environment configuration。
-- Output：raw/decoded response。
-- Must NOT：負責 SQLite write 或 UI logic。
+- 處理 HTTP request、status/error handling。
+- 依已觀察的真實 CWA schema 解析 response。
+- 必須保持可被 Pester unit test mock。
 
-### Parser
+### PowerShell ETL
 
-- Responsibility：依已觀察的 CWA Schema 解讀 response。
-- Input：CWA response。
-- Output：parsed data。
-- Must NOT：猜測尚未驗證的欄位、直接操作 UI。
-
-### Transformer / Domain Logic
-
-- Responsibility：將 parsed external data 轉成應用程式需要的穩定 representation。
-- Input：parsed CWA data。
-- Output：domain / persistence-ready data。
-- Design Goal：盡量保持 deterministic、可 Unit Test。
-
-### Repository
-
-- Responsibility：隔離 SQLite persistence/query details。
-- Input：domain/persistence data 或 query。
-- Output：stored/query results。
-- Must NOT：包含 GIS presentation logic。
+- 將 parsed observation data 寫入 SQLite。
+- 處理 null、missing、duplicate 與 refresh。
+- 支援可重複執行。
 
 ### SQLite
 
-- Responsibility：Gate 2 的 local persistence。
-- Schema：只根據真實資料需求建立。
-- Testing：Repository tests 使用 temporary isolated SQLite。
+- Gate 2 persistence layer。
+- 不作為 production browser database。
+- Tests 使用 isolated temporary SQLite。
+- 目前 helper 使用 Windows `winsqlite3.dll`，因此完整 local data pipeline 以 Windows 為主要環境。
 
-### Application Logic
+### Static JSON Data Contract
 
-- Responsibility：協調 repository data、selection、filtering、formatting、location mapping。
-- Design Goal：重要 business logic 與 UI component 解耦並可獨立測試。
+```text
+SQLite
+  ↓
+Export-WeatherJson.ps1
+  ↓
+web/public/weather.json
+```
+
+這是 Gate 2 → Gate 3 的穩定資料邊界。
+
+JSON 必須使用 UTF-8 without BOM，避免 Node / browser parser compatibility 問題。
+
+### Frontend
+
+目前 stack：
+
+| Area | Technology |
+|---|---|
+| Runtime / Toolchain | Node.js 20 |
+| Build Tool | Vite 5 |
+| Language | TypeScript 5 |
+| GIS | Leaflet 1.9 |
+| Frontend Testing | Vitest 1.x |
 
 ### Taiwan GIS UI
 
-- Responsibility：呈現台灣地圖、行政區互動與氣象資訊。
-- Must NOT：直接重新實作 ETL 或 hard-code production weather。
+目前包含：
+
+- Taiwan map
+- Temperature layer
+- Humidity layer
+- Weather condition layer
+- Layer control
+- Dynamic legend
+- Weather popup
+- Responsive UI
+- CARTO dark / light basemap
+
+---
 
 ## 5. Dependency Direction
 
-建議依賴方向：
+Production browser dependency：
 
-~~~text
+```text
 GIS UI
   ↓
 Application Logic
   ↓
-Repository
+Static weather.json
+```
+
+Data ingestion：
+
+```text
+CWA API
+  ↓
+API Client / Parser
+  ↓
+ETL
   ↓
 SQLite
-~~~
+  ↓
+JSON Export
+```
 
-External ingestion：
+Browser 不依賴 raw CWA JSON，也不直接依賴 SQLite。
 
-~~~text
-CWA API → API Client → Parser → Transformer → Repository
-~~~
+---
 
-避免 UI 直接依賴 CWA raw JSON。
+## 6. Security Boundaries
 
-## 6. Data Boundary
+### CWA API Key
 
-External CWA Schema 與 internal application representation 是不同 boundary。
+```text
+CWA_API_KEY
+= secret
+= 不可進 browser
+= 不可 commit
+```
 
-~~~text
-External CWA JSON
-      ↓ Parser
-Parsed External Data
-      ↓ Transformer
-Application / Domain Data
-~~~
+### CARTO Basemap Key
 
-這個 boundary 讓 CWA 格式變更時，不必讓整個 UI 與資料庫同時依賴 raw schema。
+```text
+VITE_CARTO_API_KEY
+= client-side key
+= browser 可見
+= 不等同於 CWA secret
+```
 
-## 7. External Dependencies
+Basemap client key 的風險控制應依 provider 支援使用 domain / referrer restriction。
 
-目前已確定：
+### Attribution
 
-- CWA Open Data
-- SQLite
-- GitHub / GitHub Actions
-- Vercel（目標 deployment platform）
+Basemap provider / OpenStreetMap attribution 必須持續顯示，不因 UI 美化而移除。
 
-Gate 3 確定的 Frontend Stack：
+---
 
-| 項目 | 技術選擇 |
-|---|---|
-| Build Tool + Language | Vite 5 + TypeScript 5 |
-| GIS Library | Leaflet 1.9 |
-| Application Runtime | Node.js 20 |
-| Frontend Testing | Vitest 1.x |
-| Basemap Tile Service | CARTO Basemap CDN（需 `VITE_CARTO_API_KEY`）|
-| Static Data Contract | `web/public/weather.json`（PowerShell ETL 產出）|
+## 7. Basemap & Localization Evolution
 
-## 8. Deployment Architecture
+### v1.0.0 — CARTO Raster
+
+目前使用：
+
+```text
+dark_all
+light_all
+```
+
+優點：
+
+- Leaflet integration 簡單。
+- Dark Matter 適合 weather data overlay。
+- 不需要額外 GIS SDK。
+
+已知限制：
+
+- Raster labels 已畫進 PNG tile。
+- 目前 labels 主要呈現英文。
+- Leaflet client 無法直接將既有 raster labels 切換成 `zh-TW`。
+
+### v1.1.0 — Planned: CARTO no-label + 自製繁中標籤
+
+預計改為：
+
+```text
+CARTO dark_nolabels / light_nolabels
+        +
+Custom Taiwan Traditional Chinese Labels
+```
 
 目標：
 
-~~~text
+- 保留 Leaflet / CARTO 架構。
+- 自行控制台灣縣市與重要區域中文標籤。
+- 不追求完整道路 / POI 中文化。
+- 降低 map label 對 weather visualization 的視覺干擾。
+
+最早受影響 Gate：
+
+```text
+Gate 3
+```
+
+因此 release verification：
+
+```text
+Gate 3 → Gate 4 → Gate 5
+```
+
+### v1.2.0 — Planned: MapTiler Dark + Traditional Chinese
+
+預計評估：
+
+```text
+Leaflet
+  +
+MapTiler Dark / Dataviz Dark
+  +
+Traditional Chinese language
+```
+
+MapTiler Leaflet integration 支援 map language，SDK 提供 `Language.TRADITIONAL_CHINESE`。
+
+預期優點：
+
+- 原生多語系 labels。
+- Dark data-visualization basemap。
+- 降低自製 labels 的維護成本。
+
+預期代價：
+
+- 新 provider dependency。
+- 新 client-side API key。
+- 新 environment configuration。
+- attribution / fallback / deployment 需重新驗證。
+
+此版本同樣從 Gate 3 重新驗證。
+
+官方參考：
+
+- CARTO Basemaps: https://www.carto.com/basemaps/
+- MapTiler Leaflet language: https://docs.maptiler.com/leaflet/examples/map-language/
+- MapTiler Language API: https://docs.maptiler.com/sdk-js/api-reference/variables/Language/
+
+---
+
+## 8. CI / Verification Architecture
+
+```text
+ci.yml
+= repository health
+
+gate1-api.yml
+= real CWA API verification
+
+gate2-integration.yml
+= CWA → ETL → SQLite verification
+
+gate3-gis.yml
+= JSON contract + frontend GIS verification
+
+gate4-quality.yml
+= repository reproducibility / quality verification
+```
+
+Gate 5 production 目前由 Vercel deployment 與 scheduled data refresh workflow 支援。
+
+CI 與 Gate verification 分離，避免每次 push 都依賴 real CWA API。
+
+---
+
+## 9. Deployment Architecture
+
+v1.0.0 production：
+
+```text
 GitHub
-  ↓ CI PASS
+  ↓
+CI / Gate Verification
+  ↓
 Vercel
   ↓
-Taiwan Weather GIS Web
-~~~
+Static Vite Site
+  ↓
+weather.json
+```
 
-SQLite 在 Production 的使用方式必須於 Gate 5 前驗證。不得假設 local writable SQLite 等同於 Vercel persistent production database。
+Production 不需要 writable SQLite database。
 
-## 9. Architecture Decisions（Gate 5 已確定）
+Weather data refresh 由 GitHub Actions 定期重新執行 ETL / JSON export，再觸發新的 static deployment。
 
-| 問題 | 決定 |
-|---|---|
-| Frontend framework | Vite 5 + TypeScript 5 |
-| GIS library | Leaflet 1.9 |
-| Web 如何讀取天氣資料 | Static JSON（`web/public/weather.json`），由 Vite publicDir 複製至 dist |
-| Frontend 測試 | Vitest 1.x（WeatherService + WeatherClassifier，43 tests）|
-| Production 資料如何定期更新 | GitHub Actions Cron Job (`gate5-data-refresh.yml`) 定期執行 PowerShell ETL 產生新的 `weather.json` 並推播，觸發 Vercel 自動部署。 |
-| Gate 5 Persistence | Vercel 靜態託管 (`vercel.json`)，無須真實 production database。 |
+---
 
+## 10. Versioned Architecture Policy
 
-## 10. Explicit Non-Goals
+Five-Gate PASS 不是永久鎖定。
+
+每個新版本先找出最早受影響 Gate：
+
+```text
+Version Change
+     ↓
+Earliest Affected Gate
+     ↓
+TEST / VERIFY
+     ↓
+All Downstream Gates
+     ↓
+Release
+```
+
+例如：
+
+| Version Change | Earliest Gate | Revalidation |
+|---|---|---|
+| v1.1 自製繁中 labels | Gate 3 | Gate 3 → 4 → 5 |
+| v1.2 MapTiler + zh-Hant | Gate 3 | Gate 3 → 4 → 5 |
+| 未來改 forecast dataset | Gate 1 | Gate 1 → 2 → 3 → 4 → 5 |
+
+---
+
+## 11. Explicit Non-Goals
 
 目前不主動加入：
 
@@ -192,3 +370,5 @@ SQLite 在 Production 的使用方式必須於 Gate 5 前驗證。不得假設 l
 - Excessive ADR
 - 不必要的 design patterns
 - CRISP-DM
+
+技術與架構演進以實際需求為準，不為了『看起來更大型』而增加複雜度。
