@@ -2,6 +2,8 @@ import './styles/style.css';
 import { WeatherService } from './services/WeatherService';
 import { MapManager } from './map/MapManager';
 import { LayerControl } from './ui/LayerControl';
+import { messages } from './i18n/messages';
+import { Lang } from './domain/WeatherClassifier';
 
 async function bootstrap() {
     const statusOverlay = document.getElementById('status-overlay')!;
@@ -18,13 +20,15 @@ async function bootstrap() {
     };
 
     try {
-        showStatus('Loading observations...');
+        const initialLang = (localStorage.getItem('twsky_locale') as Lang) || 'zh-TW';
+        const t = messages[initialLang];
+        showStatus(t.loading);
 
         const weatherService = new WeatherService();
         const observations = await weatherService.getObservations();
 
         if (!observations || observations.length === 0) {
-            showStatus('No weather data available.');
+            showStatus(t.noData);
             return;
         }
 
@@ -36,14 +40,12 @@ async function bootstrap() {
 
         const layerControl = new LayerControl(mapManager);
         layerControl.init();
-        layerControl.updateHeader(
-            mapManager.getStationCount(),
-            mapManager.getLastUpdated()
-        );
+        layerControl.updateHeader();
 
     } catch (err) {
         console.error(err);
-        showStatus('Failed to load data. Please make sure ETL has run.', true);
+        const errLang = (localStorage.getItem('twsky_locale') as Lang) || 'zh-TW';
+        showStatus(messages[errLang].failed, true);
     }
 }
 

@@ -106,7 +106,7 @@ export function getWeatherLabel(weather: string | null | undefined): string {
 
 // ── Legend data ───────────────────────────────────────────────────────────────
 
-export type Lang = 'en' | 'zh';
+export type Lang = 'en' | 'zh-TW';
 
 const LEGEND_I18N = {
     en: {
@@ -130,7 +130,7 @@ const LEGEND_I18N = {
         hvy: 'Hvy',
         extrm: 'Extrm'
     },
-    zh: {
+    'zh-TW': {
         tempTitle: '氣溫 (°C)',
         humTitle: '相對濕度 (%)',
         wxTitle: '天氣狀態',
@@ -233,7 +233,7 @@ const I18N = {
         visibility: 'Visibility',
         na: 'N/A'
     },
-    zh: {
+    'zh-TW': {
         humidity: '濕度',
         updated: '更新時間',
         wind: '風速',

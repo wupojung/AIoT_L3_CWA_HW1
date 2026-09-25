@@ -1,5 +1,6 @@
 import { MapManager } from '../map/MapManager';
-import { DataLayer, getLegendData } from '../domain/WeatherClassifier';
+import { DataLayer, getLegendData, Lang } from '../domain/WeatherClassifier';
+import { messages } from '../i18n/messages';
 
 export class LayerControl {
     constructor(private mapManager: MapManager) {}
@@ -10,7 +11,8 @@ export class LayerControl {
         this.bindPanelToggle();
         this.bindLanguageToggle();
         this.updateLegend('temperature');
-        this.setLanguage('zh'); // Default to Chinese as per standard or let it stay 'en'
+        const savedLang = (localStorage.getItem('twsky_locale') as Lang) || 'zh-TW';
+        this.setLanguage(savedLang);
     }
 
     updateHeader() {
@@ -19,14 +21,13 @@ export class LayerControl {
         const countEl = document.getElementById('station-count');
         const timeEl  = document.getElementById('last-updated');
         
-        const t = this.translations[this.currentLang];
-        if (countEl) countEl.textContent = `${count} ${t.stations}`;
+        if (countEl) countEl.textContent = count.toString();
         if (timeEl && updated) {
-            const timeStr = new Date(updated).toLocaleTimeString(this.currentLang === 'zh' ? 'zh-TW' : 'en-US', {
+            const timeStr = new Date(updated).toLocaleTimeString(this.currentLang === 'zh-TW' ? 'zh-TW' : 'en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
             });
-            timeEl.textContent = `${t.updated} ${timeStr}`;
+            timeEl.textContent = timeStr;
         }
     }
 
@@ -60,46 +61,24 @@ export class LayerControl {
         }
     }
 
-    private currentLang: 'en' | 'zh' = 'en';
+    private currentLang: Lang = 'zh-TW';
 
-    private translations = {
-        en: {
-            stations: 'stations',
-            updated: 'Updated',
-            layers: 'Layers',
-            basemap: 'BASE MAP',
-            dark: 'Dark',
-            light: 'Light',
-            datalayer: 'DATA LAYER',
-            temp: '🌡 Temperature',
-            hum: '💧 Humidity',
-            wx: '⛅ Weather',
-            wind: '💨 Wind Speed',
-            precip: '☔ Precipitation',
-            toggleBtn: '🇹🇼 中文'
-        },
-        zh: {
-            stations: '個測站',
-            updated: '更新時間',
-            layers: '圖層控制',
-            basemap: '底圖',
-            dark: '深色 (Dark)',
-            light: '淺色 (Light)',
-            datalayer: '資料圖層',
-            temp: '🌡 氣溫',
-            hum: '💧 相對濕度',
-            wx: '⛅ 天氣狀態',
-            wind: '💨 陣風/風速',
-            precip: '☔ 降雨量',
-            toggleBtn: '🇬🇧 English'
-        }
-    };
-
-    setLanguage(lang: 'en' | 'zh') {
+    setLanguage(lang: Lang) {
         this.currentLang = lang;
-        const t = this.translations[lang];
+        const t = messages[lang];
         
+        // Update document meta
+        document.documentElement.lang = lang;
+        document.title = t.browserTitle;
+        localStorage.setItem('twsky_locale', lang);
+
         // Update DOM labels
+        document.getElementById('ui-product-name')!.textContent = t.productName;
+        document.getElementById('ui-tagline')!.textContent = t.tagline;
+        document.getElementById('ui-stations')!.textContent = t.stations;
+        document.getElementById('ui-updated')!.textContent = t.updated;
+        document.getElementById('ui-datasource')!.textContent = t.dataSource;
+
         document.getElementById('ui-label-layers')!.textContent = t.layers;
         document.getElementById('ui-label-basemap')!.textContent = t.basemap;
         document.getElementById('ui-label-dark')!.textContent = t.dark;
@@ -110,7 +89,22 @@ export class LayerControl {
         document.getElementById('ui-label-wx')!.textContent = t.wx;
         document.getElementById('ui-label-wind')!.textContent = t.wind;
         document.getElementById('ui-label-precip')!.textContent = t.precip;
-        document.getElementById('lang-toggle')!.textContent = t.toggleBtn;
+        document.getElementById('lang-toggle')!.textContent = t.langToggle;
+        
+        // Update aria-labels
+        document.querySelector('.app-header')?.setAttribute('aria-label', t.ariaAppTitle);
+        document.getElementById('layer-panel')?.setAttribute('aria-label', t.ariaMapLayers);
+        document.getElementById('panel-toggle')?.setAttribute('aria-label', t.ariaTogglePanel);
+        document.getElementById('ui-label-toggle-panel')!.textContent = t.layers;
+        document.getElementById('legend')?.setAttribute('aria-label', t.ariaMapLegend);
+        
+        document.getElementById('basemap-dark')?.setAttribute('aria-label', t.ariaDark);
+        document.getElementById('basemap-light')?.setAttribute('aria-label', t.ariaLight);
+        document.getElementById('layer-temp')?.setAttribute('aria-label', t.ariaTemp);
+        document.getElementById('layer-hum')?.setAttribute('aria-label', t.ariaHum);
+        document.getElementById('layer-wx')?.setAttribute('aria-label', t.ariaWx);
+        document.getElementById('layer-wind')?.setAttribute('aria-label', t.ariaWind);
+        document.getElementById('layer-precip')?.setAttribute('aria-label', t.ariaPrecip);
 
         // Re-render legend with current layer
         this.updateLegend(this.mapManager.getActiveDataLayer());
@@ -124,7 +118,7 @@ export class LayerControl {
         const toggleBtn = document.getElementById('lang-toggle');
         if (!toggleBtn) return;
         toggleBtn.addEventListener('click', () => {
-            const newLang = this.currentLang === 'en' ? 'zh' : 'en';
+            const newLang = this.currentLang === 'en' ? 'zh-TW' : 'en';
             this.setLanguage(newLang);
         });
     }
