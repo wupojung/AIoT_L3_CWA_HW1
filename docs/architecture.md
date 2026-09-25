@@ -142,16 +142,18 @@ Application / Domain Data
 - CWA Open Data
 - SQLite
 - GitHub / GitHub Actions
-- Vercel
+- Vercel（目標 deployment platform）
 
-尚未決定：
+Gate 3 確定的 Frontend Stack：
 
-- Frontend framework
-- GIS library
-- Application runtime
-- Testing framework
-
-這些選擇在對應 Gate 才決定。
+| 項目 | 技術選擇 |
+|---|---|
+| Build Tool + Language | Vite 5 + TypeScript 5 |
+| GIS Library | Leaflet 1.9 |
+| Application Runtime | Node.js 20 |
+| Frontend Testing | Vitest 1.x |
+| Basemap Tile Service | CARTO Basemap CDN（需 `VITE_CARTO_API_KEY`）|
+| Static Data Contract | `web/public/weather.json`（PowerShell ETL 產出）|
 
 ## 8. Deployment Architecture
 
@@ -167,17 +169,20 @@ Taiwan Weather GIS Web
 
 SQLite 在 Production 的使用方式必須於 Gate 5 前驗證。不得假設 local writable SQLite 等同於 Vercel persistent production database。
 
-## 9. Architecture Open Questions
+## 9. Architecture Decisions（Gate 3 已確定）
 
-目前保留以下 TBD：
+| 問題 | 決定 |
+|---|---|
+| Frontend framework | Vite 5 + TypeScript 5 |
+| GIS library | Leaflet 1.9 |
+| Web 如何讀取天氣資料 | Static JSON（`web/public/weather.json`），由 Vite publicDir 複製至 dist |
+| Frontend 測試 | Vitest 1.x（WeatherService + WeatherClassifier，43 tests）|
 
-- 使用哪個 frontend framework？
-- 使用哪個 GIS library？
-- Web application 如何讀取 SQLite-derived data？
-- Production weather data 如何 refresh？
-- Gate 5 是否需要 read-only artifact、API layer 或其他 persistence strategy？
+尚待 Gate 5 確定：
 
-Open Question 可以保持 TBD；不得由 Agent 自動假設答案。
+- Production weather data 如何定期更新？
+- Gate 5 是否需要 CI artifact publish 或 Vercel Build Hook 觸發 ETL？
+
 
 ## 10. Explicit Non-Goals
 

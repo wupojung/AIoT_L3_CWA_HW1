@@ -278,7 +278,7 @@ web/dist/
 | Gate 1 — CWA API | [![Gate 1 API](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml) |
 | Gate 2 — ETL & SQLite | [![Gate 2 Integration](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml) |
 | Gate 3 — Taiwan GIS Web | [![Gate 3 GIS](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml) |
-| Gate 4 — GitHub & Continuous Integration | PENDING |
+| Gate 4 — GitHub & Continuous Integration | [![Gate 4 Quality](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate4-quality.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate4-quality.yml) |
 | Gate 5 — Vercel Deployment | PENDING |
 
 > Gate Badge 代表該 Gate 的 **Automated Verification** 狀態；正式 Gate PASS 仍須符合 `myplan/workflow.md` 中要求的 Manual Verification。

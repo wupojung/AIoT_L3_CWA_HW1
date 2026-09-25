@@ -28,6 +28,7 @@ jobs:
           test -f .github/workflows/gate1-api.yml
           test -f .github/workflows/gate2-integration.yml
           test -f .github/workflows/gate3-gis.yml
+          test -f .github/workflows/gate4-quality.yml
 
       - name: Verify .env is not tracked
         run: |

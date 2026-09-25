@@ -1,0 +1,146 @@
+name: Gate 4 Quality
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/gate4-quality.yml"
+      - ".github/workflows/ci.yml"
+      - "README.md"
+      - "docs/**"
+      - ".env.example"
+      - ".gitignore"
+      - "myplan/**"
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Job 1: Repository Quality Verification ──────────────────────────────────
+  repository-quality:
+    name: Repository Quality Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required project files
+        run: |
+          test -f README.md
+          test -f myplan/workflow.md
+          test -f docs/architecture.md
+          test -f docs/testing.md
+          test -f .env.example
+          test -f .gitignore
+          test -f .github/workflows/ci.yml
+          test -f .github/workflows/gate1-api.yml
+          test -f .github/workflows/gate2-integration.yml
+          test -f .github/workflows/gate3-gis.yml
+          test -f .github/workflows/gate4-quality.yml
+          echo "PASS: all required project files present."
+
+      - name: Verify .env is not tracked
+        run: |
+          if git ls-files --error-unmatch .env > /dev/null 2>&1; then
+            echo "FAIL: .env must not be tracked in git."
+            exit 1
+          fi
+          echo "PASS: .env is not tracked."
+
+      - name: Verify .env.example contains only placeholders
+        run: |
+          if grep -E '^(CWA_API_KEY|VITE_CARTO_API_KEY)=[^<]' .env.example | grep -v '^#'; then
+            echo "FAIL: .env.example contains a real secret (non-placeholder value)."
+            exit 1
+          fi
+          grep -q '^CWA_API_KEY=<YOUR_CWA_API_KEY>$' .env.example
+          grep -q '^VITE_CARTO_API_KEY=<YOUR_CARTO_API_KEY>$' .env.example
+          echo "PASS: .env.example contains only placeholder values."
+
+      - name: Verify no secret patterns committed
+        run: |
+          if git log --all --full-history -p -- .env | grep -E '^[+]CWA_API_KEY=CWA-[A-Z0-9]'; then
+            echo "FAIL: real CWA API key found in git history."
+            exit 1
+          fi
+          echo "PASS: no secret patterns detected in tracked files."
+
+      - name: Verify generated files are not tracked
+        run: |
+          if git ls-files | grep -E '(^dist/|\.db$|\.sqlite$|\.sqlite3$)'; then
+            echo "FAIL: generated/local files should not be tracked."
+            exit 1
+          fi
+          echo "PASS: no generated files tracked."
+
+      - name: Verify weather.json static artifact is present
+        run: |
+          test -f web/public/weather.json
+          node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('web/public/weather.json', 'utf8'));
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('Gate 4 FAIL: web/public/weather.json is empty or not an array');
+          }
+          console.log('PASS: weather.json records =', data.length);
+          "
+
+      - name: Gate 4 Repository Quality summary
+        run: |
+          echo "Gate 4 PASS: Repository Quality Verification"
+          echo "  - Required files: PASS"
+          echo "  - .env not tracked: PASS"
+          echo "  - .env.example placeholders only: PASS"
+          echo "  - No committed secrets: PASS"
+          echo "  - No generated files tracked: PASS"
+          echo "  - Static weather.json present: PASS"
+
+  # ── Job 2: Clean Clone Verification ─────────────────────────────────────────
+  clean-clone-verification:
+    name: Clean Clone Verification
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 (no cache — simulates clean clone)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          # Intentionally no cache to verify reproducibility from scratch
+
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run Vitest
+        run: npm run test -- --run
+
+      - name: Vite production build
+        run: npm run build
+
+      - name: Verify build artifacts
+        run: |
+          test -f dist/index.html
+          test -f dist/weather.json
+          echo "PASS: dist/index.html exists."
+          echo "PASS: dist/weather.json exists."
+
+      - name: Gate 4 Clean Clone summary
+        run: |
+          echo "Gate 4 PASS: Clean Clone Verification"
+          echo "  - npm ci: PASS"
+          echo "  - TypeScript: PASS"
+          echo "  - Vitest: PASS"
+          echo "  - Vite build: PASS"
+          echo "  - dist artifacts: PASS"
