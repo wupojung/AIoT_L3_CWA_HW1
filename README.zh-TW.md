@@ -12,6 +12,11 @@
 
 **Live Demo：** https://twsky.vercel.app/
 
+## 系統預覽
+
+[![TW Sky 系統預覽](docs/assets/tw-sky-system-preview.webp)](https://twsky.vercel.app/)
+
+
 ## 專案特色
 
 - 使用真實 CWA Open Data（`O-A0003-001`）

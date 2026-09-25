@@ -12,6 +12,11 @@ The project uses a PowerShell + SQLite data pipeline and a Vite + TypeScript + L
 
 **Live Demo:** https://twsky.vercel.app/
 
+## System Preview
+
+[![TW Sky system preview](docs/assets/tw-sky-system-preview.webp)](https://twsky.vercel.app/)
+
+
 ## Highlights
 
 - Real CWA Open Data (`O-A0003-001`)
