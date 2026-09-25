@@ -18,6 +18,13 @@ MAJOR.MINOR.PATCH
 
 目前規劃中的後續版本。
 
+### Documentation / Governance
+
+- README 頂部增加 Live Demo、Release 與 MIT License badges。
+- Development Status 將 Gate decision 統一顯示為固定 `✅ PASS`，workflow / production evidence 移至獨立 Evidence 欄。
+- 新增標準 MIT `LICENSE`，明確區分 project-owned code/docs 與第三方資料 / map services。
+- 新增 documentation-only batching rule：ChatGPT / IDE Agent 應將同一輪文件修改集中成單一 consolidated commit / push，避免不必要的 GitHub Actions runs。
+
 ### Planned — v1.1.0
 
 **主題：CARTO no-label basemap + 自製繁體中文標籤**

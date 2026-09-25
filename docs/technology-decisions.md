@@ -714,3 +714,100 @@ Traditional Chinese labels
 3. 更新 `docs/architecture.md`。
 4. 如影響 setup / runtime，更新 `README.md`。
 5. 從最早受影響 Gate 重新驗證。
+
+
+---
+
+## TD-020 — 專案原始碼採 MIT License
+
+**Status:** Accepted  
+**Introduced:** v1.0.0 documentation baseline
+
+### Decision
+
+本專案自行撰寫的 source code 與 project documentation 採用：
+
+```text
+MIT License
+SPDX-License-Identifier: MIT
+```
+
+Copyright holder 目前以 repository owner 表示：
+
+```text
+Copyright (c) 2026 wupojung
+```
+
+### Reason
+
+MIT 是簡潔、寬鬆且廣泛使用的 open-source license，允許使用、修改、散布與再授權，並要求保留 copyright / permission notice。
+
+### Scope Boundary
+
+MIT 只涵蓋本專案有權授權的原始碼與文件，不重新授權：
+
+- CWA Open Data。
+- CARTO / OpenStreetMap map tiles、data 或 attribution。
+- npm / third-party packages。
+
+第三方資料與服務仍依其原始 license / terms 使用。
+
+---
+
+## TD-021 — Documentation Changes 採 Batch Commit / Push
+
+**Status:** Accepted  
+**Introduced:** v1.0.0 documentation baseline
+
+### Problem
+
+GitHub Actions 目前會在 push 時執行 CI / quality checks。
+
+若 ChatGPT / IDE Agent 在修改 README、Architecture、Changelog 等文件時，每修改一小段就立即 push，會造成：
+
+```text
+small doc edit
+    ↓
+push
+    ↓
+CI run
+    ↓
+another small edit
+    ↓
+push
+    ↓
+another CI run
+```
+
+這會增加不必要的 Actions 執行次數、等待時間與運算資源消耗。
+
+### Decision
+
+Documentation-only 工作預設採：
+
+```text
+Collect Changes
+    ↓
+Review as One Batch
+    ↓
+Single Consolidated Commit
+    ↓
+Single Push
+    ↓
+CI Verification
+```
+
+不要為每個 wording、badge、table alignment 或小型 formatting change 個別 push。
+
+### Exceptions
+
+可以立即獨立提交：
+
+- security / secret fix
+- 使用者明確要求立即 verification
+- 需要獨立保留 evidence 的重要變更
+- 程式碼與文件必須分開驗證的情況
+
+### Principle
+
+減少 CI churn 不代表跳過 CI；而是 **一次完整變更對應一次有意義的 verification run**。

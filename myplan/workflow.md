@@ -54,6 +54,8 @@ FAIL → FIX → TEST AGAIN
 10. Automated Tests 與必要 Manual Verification 必須實際執行。
 11. Agent 只處理 CURRENT GATE，不得提前實作 Future Gates。
 12. 本專案不使用 CRISP-DM。
+13. 由 ChatGPT / IDE Agent 執行 **文件型修改（documentation-only changes）** 時，應先完成同一輪審閱與編輯，再以單一 consolidated commit / push 提交；不得每修改一個段落、badge 或格式就立即 push。
+14. 文件修改 batching 的目的，是避免每次 push 都觸發 GitHub Actions，造成不必要的 CI run、等待時間與運算資源消耗。例外僅限：使用者明確要求立即驗證、security / secret fix、或該變更需要獨立保留 verification evidence。
 
 ## 3. Versioned Release / Gate Re-entry Policy
 

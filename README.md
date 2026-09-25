@@ -1,11 +1,14 @@
 # Taiwan Weather GIS Web
 
 [![CI](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-twsky.vercel.app-000000?logo=vercel&logoColor=white)](https://twsky.vercel.app/)
+[![Release](https://img.shields.io/badge/release-v1.0.0-2563eb)](CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
 
 以中央氣象署（CWA）Open Data 為資料來源的 Taiwan Weather GIS Web。  
 專案採用 **PowerShell + SQLite** 建立資料管線，並以 **Vite + TypeScript + Leaflet** 建立前端 GIS，搭配 **Pester、Vitest 與 GitHub Actions** 提供可重複驗證的開發流程。
 
-> 上方 **CI Badge** 代表目前整個 repository 的日常健康狀態；各 Gate 的驗證狀態請見 [Development Status](#development-status)。
+> `main` branch 的整體健康狀態由 GitHub Actions 持續驗證；各 Gate 的完成狀態與驗證證據集中在 [Development Status](#development-status)。
 
 
 ## Current Release
@@ -290,18 +293,17 @@ web/dist/
 
 ## Development Status
 
-| Gate | Status |
-| --- | --- |
-| Gate 1 — CWA API | [![Gate 1 API](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml) |
-| Gate 2 — ETL & SQLite | [![Gate 2 Integration](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml) |
-| Gate 3 — Taiwan GIS Web | [![Gate 3 GIS](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml) |
-| Gate 4 — GitHub & Continuous Integration | [![Gate 4 Quality](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate4-quality.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate4-quality.yml) |
-| Gate 5 — Vercel Deployment | [✅ Deployed (twsky.vercel.app)](https://twsky.vercel.app/) |
+| Gate | Status | Evidence |
+| --- | :---: | --- |
+| Gate 1 — CWA API | ✅ PASS | [![Verification](https://img.shields.io/github/actions/workflow/status/wupojung/AIoT_L3_CWA_HW1/gate1-api.yml?branch=main&label=Verification)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate1-api.yml) |
+| Gate 2 — ETL & SQLite | ✅ PASS | [![Verification](https://img.shields.io/github/actions/workflow/status/wupojung/AIoT_L3_CWA_HW1/gate2-integration.yml?branch=main&label=Verification)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate2-integration.yml) |
+| Gate 3 — Taiwan GIS Web | ✅ PASS | [![Verification](https://img.shields.io/github/actions/workflow/status/wupojung/AIoT_L3_CWA_HW1/gate3-gis.yml?branch=main&label=Verification)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate3-gis.yml) |
+| Gate 4 — GitHub & Continuous Integration | ✅ PASS | [![Verification](https://img.shields.io/github/actions/workflow/status/wupojung/AIoT_L3_CWA_HW1/gate4-quality.yml?branch=main&label=Verification)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate4-quality.yml) |
+| Gate 5 — Vercel Deployment | ✅ PASS | [![Production](https://img.shields.io/badge/Production-Live-22c55e?logo=vercel&logoColor=white)](https://twsky.vercel.app/) |
 
-> Gate Badge 代表該 Gate 的 **Automated Verification** 狀態；正式 Gate PASS 仍須符合 `myplan/workflow.md` 中要求的 Manual Verification。
+> **Status** 表示目前 release 的 Gate decision；**Evidence** 連到對應的自動化驗證或 Production。新版本若修改既有功能，仍須依 Five-Gate re-entry policy 重新驗證受影響 Gate。
 
 ---
-
 
 ## Version Roadmap
 
@@ -519,6 +521,7 @@ Vite
 AIoT_L3_CWA_HW1/
 ├── README.md
 ├── CHANGELOG.md
+├── LICENSE
 ├── .env.example
 ├── .gitignore
 │
@@ -650,6 +653,25 @@ Production verification 持續確認：
 
 ---
 
+## License
+
+本專案自行撰寫的 **source code 與 project documentation** 採用 [MIT License](LICENSE)。
+
+```text
+Copyright (c) 2026 wupojung
+SPDX-License-Identifier: MIT
+```
+
+MIT License 不會重新授權第三方內容。以下內容仍受各自的原始條款約束：
+
+- 中央氣象署（CWA）Open Data。
+- CARTO / OpenStreetMap basemap、tiles 與 attribution。
+- npm / third-party libraries 與其各自的 open-source licenses。
+
+使用或散布本專案時，請同時遵守相關第三方資料與服務條款。
+
+---
+
 ## Documentation
 
 - [Development Workflow](myplan/workflow.md)
@@ -657,6 +679,7 @@ Production verification 持續確認：
 - [Testing Strategy](docs/testing.md)
 - [Technology Decisions](docs/technology-decisions.md)
 - [Release History / Changelog](CHANGELOG.md)
+- [MIT License](LICENSE)
 
 ---
 
