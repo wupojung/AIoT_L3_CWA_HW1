@@ -19,13 +19,13 @@ function buildTileProviders() {
     if (key) {
         return {
             dark: {
-                url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=' + key,
+                url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=' + key,
                 attribution:
                     '&copy; <a href="https://carto.com/attributions">CARTO</a> ' +
                     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             },
             light: {
-                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?api_key=' + key,
+                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=' + key,
                 attribution:
                     '&copy; <a href="https://carto.com/attributions">CARTO</a> ' +
                     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
