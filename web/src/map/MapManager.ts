@@ -17,10 +17,11 @@ export class MapManager {
             position: 'bottomright'
         }).addTo(this.map);
 
-        // Sleek Dark Matter tile layer
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // OpenStreetMap tile layer — free, no watermark.
+        // Attribution text is legally required and must be kept.
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(this.map);
 
         this.markersLayer = L.layerGroup().addTo(this.map);
