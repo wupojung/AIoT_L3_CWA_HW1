@@ -11,10 +11,23 @@ function Invoke-CwaRequest {
     $uri = "https://opendata.cwa.gov.tw/api/v1/rest/datastore/${DatasetId}?Authorization=${ApiKey}&format=JSON"
     Write-Host "Fetching CWA dataset '$DatasetId'..."
 
+    $tempFile = [System.IO.Path]::GetTempFileName()
+
     try {
-        $wc = [System.Net.WebClient]::new()
-        $wc.Encoding = [System.Text.Encoding]::UTF8
-        $jsonString = $wc.DownloadString($uri)
+        # Use a mockable PowerShell HTTP boundary and decode the response explicitly as UTF-8.
+        # This avoids Windows/default-encoding mojibake for Traditional Chinese CWA data.
+        Invoke-WebRequest `
+            -Uri $uri `
+            -Method Get `
+            -UseBasicParsing `
+            -OutFile $tempFile `
+            -ErrorAction Stop | Out-Null
+
+        $jsonString = [System.IO.File]::ReadAllText(
+            $tempFile,
+            [System.Text.Encoding]::UTF8
+        )
+
         return ($jsonString | ConvertFrom-Json)
     }
     catch {
@@ -25,6 +38,11 @@ function Invoke-CwaRequest {
         }
 
         throw "Failed to fetch CWA API: $errorMessage"
+    }
+    finally {
+        if (Test-Path $tempFile) {
+            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+        }
     }
 }
 
