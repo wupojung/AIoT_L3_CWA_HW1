@@ -268,7 +268,61 @@ Run Regression Tests
 
 如果 Bug 不適合 automated test，至少留下明確 manual verification procedure。
 
-## 13. Continuous Integration Policy
+## 13. Versioned Regression Policy
+
+Release version 改變時，不只驗證新功能，也必須重新驗證所有受影響 downstream behavior。
+
+基本規則：
+
+~~~text
+Change
+ ↓
+Earliest Affected Gate
+ ↓
+Regression Tests
+ ↓
+Manual Verification
+ ↓
+Downstream Gates
+~~~
+
+### GIS / Basemap Changes
+
+若修改：
+
+- basemap provider
+- map language / labels
+- Leaflet layer behavior
+- client-side map API key
+- attribution
+- fallback behavior
+
+至少重新執行：
+
+~~~text
+Gate 3 Automated Tests
++
+Gate 3 Manual GIS Verification
++
+Gate 4 CI / Build Verification
++
+Gate 5 Production Smoke Test
+~~~
+
+Manual GIS Verification 應檢查：
+
+- Taiwan map 正常載入。
+- Labels 語言符合 release requirement。
+- Attribution 正確且可見。
+- Temperature / Humidity / Weather layers 沒有 regression。
+- Popup 與 legend 正常。
+- Basemap fallback 行為合理。
+- Provider API key 未誤當 server-side secret。
+- Production browser console 無 blocking error。
+
+v1.1.0（CARTO no-label + 自製繁中標籤）與 v1.2.0（MapTiler + Traditional Chinese）都屬於 Gate 3 regression scope。
+
+## 14. Continuous Integration Policy
 
 CI 從專案早期開始，不等待 Gate 4。
 
@@ -314,7 +368,7 @@ SQLiteHelper Pester Tests
 
 真實 CWA API Request 屬於 Integration Verification，可由 Gate Verification、Manual Run 或後續 Dedicated / Scheduled Workflow 執行。
 
-## 14. CI PASS Rule
+## 15. CI PASS Rule
 
 ~~~text
 Source Code
@@ -338,7 +392,7 @@ CI = FAIL
 
 不得透過刪除 failing test、降低 assertion、skip required test 或只修改 README 狀態取得假性綠燈。
 
-## 15. Gate Verification Evidence
+## 16. Gate Verification Evidence
 
 Gate PASS 的 evidence 可以包含：
 
@@ -354,7 +408,7 @@ Gate PASS 的 evidence 可以包含：
 - "looks correct"
 - "implementation complete"
 
-## 16. What We Will Not Test
+## 17. What We Will Not Test
 
 目前不主動測試：
 
