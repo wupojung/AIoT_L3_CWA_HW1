@@ -1,4 +1,4 @@
-﻿{
+{
   "success": "true",
   "result": {
     "resource_id": "O-A0003-001",
@@ -10,10 +10,16 @@
         "StationName": "基隆",
         "StationId": "466940",
         "ObsTime": {
-          "DateTime": "2026-09-25T00:20:00+08:00"
+          "DateTime": "2026-09-25T16:00:00+08:00"
         },
         "GeoInfo": {
           "Coordinates": [
+            {
+              "CoordinateName": "TWD67",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "25.135104",
+              "StationLongitude": "121.732242"
+            },
             {
               "CoordinateName": "WGS84",
               "CoordinateFormat": "decimal degrees",
@@ -29,8 +35,117 @@
         },
         "WeatherElement": {
           "Weather": "陰",
-          "AirTemperature": "25.5",
-          "RelativeHumidity": "82"
+          "VisibilityDescription": ">30",
+          "SunshineDuration": "4.8",
+          "Now": {
+            "Precipitation": "0.0"
+          },
+          "WindDirection": "40.0",
+          "WindSpeed": "3.5",
+          "AirTemperature": "27.6",
+          "RelativeHumidity": "79",
+          "AirPressure": "1008.4",
+          "UVIndex": "2",
+          "Max10MinAverage": {
+            "WindSpeed": "5.6",
+            "Occurred_at": {
+              "WindDirection": "20.0",
+              "DateTime": "2026-09-25T15:30:00+08:00"
+            }
+          },
+          "GustInfo": {
+            "PeakGustSpeed": "7.7",
+            "Occurred_at": {
+              "WindDirection": "20.0",
+              "DateTime": "2026-09-25T15:12:00+08:00"
+            }
+          },
+          "DailyExtreme": {
+            "DailyHigh": {
+              "TemperatureInfo": {
+                "AirTemperature": "28.0",
+                "Occurred_at": {
+                  "DateTime": "2026-09-25T11:53:00+08:00"
+                }
+              }
+            },
+            "DailyLow": {
+              "TemperatureInfo": {
+                "AirTemperature": "24.3",
+                "Occurred_at": {
+                  "DateTime": "2026-09-25T06:14:00+08:00"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "StationName": "Missing Data Station",
+        "StationId": "999999",
+        "ObsTime": {
+          "DateTime": "2026-09-25T16:00:00+08:00"
+        },
+        "GeoInfo": {
+          "Coordinates": [
+            {
+              "CoordinateName": "WGS84",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "-99",
+              "StationLongitude": "-99"
+            }
+          ],
+          "StationAltitude": "-99",
+          "CountyName": "未知",
+          "TownName": "未知",
+          "CountyCode": "-99",
+          "TownCode": "-99"
+        },
+        "WeatherElement": {
+          "Weather": "-99",
+          "VisibilityDescription": "-99",
+          "SunshineDuration": "-99",
+          "Now": {
+            "Precipitation": "-99"
+          },
+          "WindDirection": "-99",
+          "WindSpeed": "-99",
+          "AirTemperature": "-99",
+          "RelativeHumidity": "-99",
+          "AirPressure": "-99",
+          "UVIndex": "-99",
+          "Max10MinAverage": {
+            "WindSpeed": "-99",
+            "Occurred_at": {
+              "WindDirection": "-99",
+              "DateTime": "-99"
+            }
+          },
+          "GustInfo": {
+            "PeakGustSpeed": "-99",
+            "Occurred_at": {
+              "WindDirection": "-99",
+              "DateTime": "-99"
+            }
+          },
+          "DailyExtreme": {
+            "DailyHigh": {
+              "TemperatureInfo": {
+                "AirTemperature": "-99",
+                "Occurred_at": {
+                  "DateTime": "-99"
+                }
+              }
+            },
+            "DailyLow": {
+              "TemperatureInfo": {
+                "AirTemperature": "-99",
+                "Occurred_at": {
+                  "DateTime": "-99"
+                }
+              }
+            }
+          }
         }
       }
     ]

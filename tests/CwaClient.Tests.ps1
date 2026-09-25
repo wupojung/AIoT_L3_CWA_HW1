@@ -1,4 +1,4 @@
-Import-Module "$PSScriptRoot\..\src\CwaClient.psm1" -Force
+﻿Import-Module "$PSScriptRoot\..\src\CwaClient.psm1" -Force
 
 Describe "CwaClient Parser Tests" {
     It "Parses valid response correctly" {
@@ -6,12 +6,26 @@ Describe "CwaClient Parser Tests" {
         $mockResp = ConvertFrom-Json $jsonStr
         $result = @(ConvertFrom-CwaResponse -CwaResponse $mockResp)
 
-        $result.Count | Should-Be 1
-        $result[0].StationName | Should-Be "基隆"
-        $result[0].StationId | Should-Be "466940"
-        $result[0].County | Should-Be "基隆市"
-        $result[0].Township | Should-Be "信義區"
-        $result[0].Temperature | Should-Be "25.5"
+        $result.Count | Should-Be 2
+        
+        # Check normal station
+        $s1 = $result[0]
+        $s1.StationId | Should-Be "466940"
+        $s1.CountyCode | Should-Be "10017"
+        $s1.Latitude | Should-Be "25.133314"
+        $s1.VisibilityDescription | Should-Be ">30"
+        $s1.AirTemperature | Should-Be "27.6"
+        $s1.Max10MinAverage_WindSpeed | Should-Be "5.6"
+        $s1.DailyHigh_AirTemperature | Should-Be "28.0"
+
+        # Check sentinel station (-99 handled as null)
+        $s2 = $result[1]
+        $s2.StationName | Should-Be "Missing Data Station"
+        $s2.Latitude | Should-Be $null
+        $s2.AirTemperature | Should-Be $null
+        $s2.Precipitation | Should-Be $null
+        $s2.Max10MinAverage_WindSpeed | Should-Be $null
+        $s2.DailyHigh_AirTemperature | Should-Be $null
     }
 
     It "Throws when success is false" {

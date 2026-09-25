@@ -42,37 +42,55 @@ function ConvertFrom-CwaResponse {
         return $parsedStations
     }
 
+    $f = {
+        param($v)
+        $s = [string]$v
+        if ([string]::IsNullOrWhiteSpace($s)) { return $null }
+        if ($s -match "^-(99|98)(\.0+)?$" -or $s -eq "990" -or $s -eq "X") { return $null }
+        return $s
+    }
+
     foreach ($station in $stationsRoot) {
-        $stationName = $station.StationName
-        $stationId = $station.StationId
-        $obsTime = $station.ObsTime.DateTime
-
-        $countyName = $station.GeoInfo.CountyName
-        $townName = $station.GeoInfo.TownName
-
-        $lat = $null
-        $lon = $null
         $wgs84 = $station.GeoInfo.Coordinates | Where-Object { $_.CoordinateName -eq "WGS84" }
-        if ($wgs84) {
-            $lat = $wgs84.StationLatitude
-            $lon = $wgs84.StationLongitude
-        }
-
-        $weather = $station.WeatherElement.Weather
-        $temp = $station.WeatherElement.AirTemperature
-        $humidity = $station.WeatherElement.RelativeHumidity
+        $we = $station.WeatherElement
 
         $parsedStations += [PSCustomObject]@{
-            StationId = $stationId
-            StationName = $stationName
-            County = $countyName
-            Township = $townName
-            Latitude = $lat
-            Longitude = $lon
-            ObsTime = $obsTime
-            Weather = $weather
-            Temperature = $temp
-            Humidity = $humidity
+            StationId = $station.StationId
+            StationName = $station.StationName
+            ObsTime = $station.ObsTime.DateTime
+            
+            Latitude = &$f ($wgs84.StationLatitude)
+            Longitude = &$f ($wgs84.StationLongitude)
+            StationAltitude = &$f ($station.GeoInfo.StationAltitude)
+            CountyName = &$f ($station.GeoInfo.CountyName)
+            TownName = &$f ($station.GeoInfo.TownName)
+            CountyCode = &$f ($station.GeoInfo.CountyCode)
+            TownCode = &$f ($station.GeoInfo.TownCode)
+
+            Weather = &$f ($we.Weather)
+            VisibilityDescription = &$f ($we.VisibilityDescription)
+            SunshineDuration = &$f ($we.SunshineDuration)
+            Precipitation = &$f ($we.Now.Precipitation)
+            WindDirection = &$f ($we.WindDirection)
+            WindSpeed = &$f ($we.WindSpeed)
+            AirTemperature = &$f ($we.AirTemperature)
+            RelativeHumidity = &$f ($we.RelativeHumidity)
+            AirPressure = &$f ($we.AirPressure)
+            UVIndex = &$f ($we.UVIndex)
+
+            Max10MinAverage_WindSpeed = &$f ($we.Max10MinAverage.WindSpeed)
+            Max10MinAverage_WindDirection = &$f ($we.Max10MinAverage.Occurred_at.WindDirection)
+            Max10MinAverage_DateTime = &$f ($we.Max10MinAverage.Occurred_at.DateTime)
+
+            GustInfo_PeakGustSpeed = &$f ($we.GustInfo.PeakGustSpeed)
+            GustInfo_WindDirection = &$f ($we.GustInfo.Occurred_at.WindDirection)
+            GustInfo_DateTime = &$f ($we.GustInfo.Occurred_at.DateTime)
+
+            DailyHigh_AirTemperature = &$f ($we.DailyExtreme.DailyHigh.TemperatureInfo.AirTemperature)
+            DailyHigh_DateTime = &$f ($we.DailyExtreme.DailyHigh.TemperatureInfo.Occurred_at.DateTime)
+            
+            DailyLow_AirTemperature = &$f ($we.DailyExtreme.DailyLow.TemperatureInfo.AirTemperature)
+            DailyLow_DateTime = &$f ($we.DailyExtreme.DailyLow.TemperatureInfo.Occurred_at.DateTime)
         }
     }
 
