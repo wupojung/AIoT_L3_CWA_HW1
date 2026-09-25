@@ -55,6 +55,89 @@ FAIL → FIX → TEST AGAIN
 11. Agent 只處理 CURRENT GATE，不得提前實作 Future Gates。
 12. 本專案不使用 CRISP-DM。
 
+## 3. Versioned Release / Gate Re-entry Policy
+
+Five-Gate Workflow 是 **每個 release 的品質驗證模型**，不是一次性且不可回頭的線性流程。
+
+第一個完整 baseline release 定義為：
+
+~~~text
+v1.0.0
+~~~
+
+當後續版本修改既有功能時，先找出「最早受影響的 Gate」，再從該 Gate 重新執行：
+
+~~~text
+BUILD → RUN → TEST → VERIFY → PASS
+~~~
+
+並重新驗證所有 downstream Gates。
+
+### Rule
+
+~~~text
+Version Change
+     ↓
+Earliest Affected Gate
+     ↓
+Affected Gate Verification
+     ↓
+All Downstream Gates
+     ↓
+New Release
+~~~
+
+### Examples
+
+v1.1.0：CARTO no-label + 自製繁體中文標籤：
+
+~~~text
+Gate 3
+  ↓
+Gate 4
+  ↓
+Gate 5
+~~~
+
+Gate 1 / Gate 2 若 CWA dataset、Parser、ETL、SQLite data contract 未變更，可沿用既有 evidence。
+
+v1.2.0：MapTiler Dark + Traditional Chinese labels：
+
+~~~text
+Gate 3
+  ↓
+Gate 4
+  ↓
+Gate 5
+~~~
+
+因 basemap provider / frontend GIS integration 改變，必須重新執行 Gate 3 的 automated + manual GIS verification，並重新驗證 CI 與 Production。
+
+若未來改用新的 CWA forecast dataset：
+
+~~~text
+Gate 1
+  ↓
+Gate 2
+  ↓
+Gate 3
+  ↓
+Gate 4
+  ↓
+Gate 5
+~~~
+
+### Release Documentation
+
+每次 release 至少同步更新：
+
+- `CHANGELOG.md`
+- `docs/technology-decisions.md`（若有新的技術決策）
+- `docs/architecture.md`（若 architecture 有變動）
+- `README.md`（若 setup、runtime、feature 或 deployment 有變動）
+
+舊版本的 PASS evidence 不得被當成新版本自動 PASS 的證明。
+
 ---
 
 ## Gate 1 — CWA API
