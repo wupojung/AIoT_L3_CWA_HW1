@@ -1,9 +1,10 @@
 import { MapManager } from '../map/MapManager';
 import { DataLayer, getLegendData, Lang } from '../domain/WeatherClassifier';
 import { messages } from '../i18n/messages';
+import { StationDetail } from './StationDetail';
 
 export class LayerControl {
-    constructor(private mapManager: MapManager) {}
+    constructor(private mapManager: MapManager, private stationDetail?: StationDetail) {}
 
     init() {
         this.bindBasemapControls();
@@ -71,6 +72,7 @@ export class LayerControl {
         document.documentElement.lang = lang;
         document.title = t.browserTitle;
         localStorage.setItem('twsky_locale', lang);
+        this.stationDetail?.setLanguage(lang);
 
         // Update DOM labels
         document.getElementById('ui-product-name')!.textContent = t.productName;
@@ -88,6 +90,8 @@ export class LayerControl {
         document.getElementById('ui-label-hum')!.textContent = t.hum;
         document.getElementById('ui-label-wx')!.textContent = t.wx;
         document.getElementById('ui-label-wind')!.textContent = t.wind;
+        document.getElementById('ui-label-pressure')!.textContent = t.pressure;
+        document.getElementById('ui-label-uv')!.textContent = t.uv;
         document.getElementById('ui-label-precip')!.textContent = t.precip;
         document.getElementById('lang-toggle')!.textContent = t.langToggle;
         
@@ -104,7 +108,11 @@ export class LayerControl {
         document.getElementById('layer-hum')?.setAttribute('aria-label', t.ariaHum);
         document.getElementById('layer-wx')?.setAttribute('aria-label', t.ariaWx);
         document.getElementById('layer-wind')?.setAttribute('aria-label', t.ariaWind);
+        document.getElementById('layer-pressure')?.setAttribute('aria-label', t.ariaPressure);
+        document.getElementById('layer-uv')?.setAttribute('aria-label', t.ariaUV);
         document.getElementById('layer-precip')?.setAttribute('aria-label', t.ariaPrecip);
+        document.getElementById('station-detail')?.setAttribute('aria-label', t.ariaStationDetail);
+        document.getElementById('station-detail-close')?.setAttribute('aria-label', t.ariaCloseDetail);
 
         // Re-render legend with current layer
         this.updateLegend(this.mapManager.getActiveDataLayer());

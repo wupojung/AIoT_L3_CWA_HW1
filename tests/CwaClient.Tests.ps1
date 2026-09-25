@@ -53,14 +53,20 @@ Describe "CwaClient API HTTP Tests" {
     }
 
     It "Handles HTTP failure" {
-        Mock Invoke-RestMethod { throw "401 Unauthorized" } -ModuleName CwaClient
+        Mock Invoke-WebRequest { throw "401 Unauthorized" } -ModuleName CwaClient
 
         { Invoke-CwaRequest -DatasetId "O-A0003-001" -ApiKey "mock_key" } |
             Should-Throw -ExceptionMessage "*Failed to fetch CWA API: 401 Unauthorized*"
     }
 
     It "Handles Successful response" {
-        Mock Invoke-RestMethod { return [PSCustomObject]@{ success = "true" } } -ModuleName CwaClient
+        # Simulate Invoke-WebRequest writing a valid JSON fixture to -OutFile
+        $fixture = Get-Content "$PSScriptRoot\fixtures\valid_response.json" -Raw -Encoding UTF8
+
+        Mock Invoke-WebRequest {
+            param($Uri, $Method, $UseBasicParsing, $OutFile, $ErrorAction)
+            [System.IO.File]::WriteAllText($OutFile, $Using:fixture, [System.Text.Encoding]::UTF8)
+        } -ModuleName CwaClient
 
         $resp = Invoke-CwaRequest -DatasetId "O-A0003-001" -ApiKey "mock_key"
         $resp.success | Should-Be "true"

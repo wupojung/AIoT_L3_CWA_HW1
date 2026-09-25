@@ -100,6 +100,16 @@
             <span class="radio-dot"></span>
             <span id="ui-label-wind">陣風/風速</span>
           </label>
+          <label class="radio-row" id="layer-pressure-label">
+            <input type="radio" name="datalayer" id="layer-pressure" value="pressure" aria-label="氣壓圖層" />
+            <span class="radio-dot"></span>
+            <span id="ui-label-pressure">氣壓</span>
+          </label>
+          <label class="radio-row" id="layer-uv-label">
+            <input type="radio" name="datalayer" id="layer-uv" value="uvIndex" aria-label="紫外線圖層" />
+            <span class="radio-dot"></span>
+            <span id="ui-label-uv">紫外線</span>
+          </label>
           <label class="radio-row" id="layer-precip-label">
             <input type="radio" name="datalayer" id="layer-precip" value="precipitation" aria-label="降雨量圖層" />
             <span class="radio-dot"></span>
@@ -108,6 +118,15 @@
         </div>
 
       </aside>
+
+      <!-- ── Station Detail Drawer ──────────────────────────────────────── -->
+      <div id="station-detail" class="station-detail" aria-label="測站詳情" hidden>
+        <div class="station-detail-header">
+          <span class="station-detail-title" id="sd-title">測站詳情</span>
+          <button id="station-detail-close" class="station-detail-close" aria-label="關閉">✕</button>
+        </div>
+        <div id="station-detail-content" class="station-detail-content"></div>
+      </div>
 
       <!-- ── Mobile Panel Toggle ────────────────────────────────────────── -->
       <button id="panel-toggle" class="panel-toggle-btn" aria-label="切換圖層面板" aria-expanded="false">

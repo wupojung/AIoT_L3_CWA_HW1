@@ -2,7 +2,7 @@ import { WeatherObservation } from './WeatherObservation';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type DataLayer = 'temperature' | 'humidity' | 'weather' | 'windSpeed' | 'precipitation';
+export type DataLayer = 'temperature' | 'humidity' | 'weather' | 'windSpeed' | 'precipitation' | 'pressure' | 'uvIndex';
 
 export interface LegendItem {
     color?: string;
@@ -78,6 +78,28 @@ export function getPrecipitationColor(precip: number): string {
     return '#4C1D95'; // Extreme
 }
 
+// ── Air Pressure ──────────────────────────────────────────────────────────────
+// Relative visual scale for Taiwan sea-level pressure (~990–1025 hPa typical).
+// Not meteorological forecast categories — purely visual context.
+
+export function getAirPressureColor(pressure: number): string {
+    if (pressure < 1000) return '#7DD3FC'; // Low — light blue
+    if (pressure < 1010) return '#94A3B8'; // Normal — neutral slate
+    if (pressure < 1016) return '#FCD34D'; // High-Normal — warm amber
+    return '#F97316';                       // High — deeper orange
+}
+
+// ── UV Index ──────────────────────────────────────────────────────────────────
+// WHO / CWA standard UV Index categories.
+
+export function getUVIndexColor(uv: number): string {
+    if (uv <= 2) return '#10B981';  // Low — green
+    if (uv <= 5) return '#FACC15';  // Moderate — yellow
+    if (uv <= 7) return '#FB923C';  // High — orange
+    if (uv <= 10) return '#EF4444'; // Very High — red
+    return '#8B5CF6';               // Extreme — purple
+}
+
 // ── Weather condition ─────────────────────────────────────────────────────────
 
 /**
@@ -95,12 +117,39 @@ export function getWeatherSymbol(weather: string | null | undefined): string {
     return '◎';
 }
 
+// Map of CWA raw Chinese weather strings to English display labels.
+const WEATHER_EN: Record<string, string> = {
+    '晴': 'Clear',
+    '晴天': 'Clear',
+    '多雲': 'Partly Cloudy',
+    '陰': 'Overcast',
+    '陰天': 'Overcast',
+    '晴時多雲': 'Partly Cloudy',
+    '多雲時晴': 'Mostly Clear',
+    '多雲時陰': 'Mostly Cloudy',
+    '陰時多雲': 'Mostly Cloudy',
+    '下雨': 'Rain',
+    '大雨': 'Heavy Rain',
+    '小雨': 'Light Rain',
+    '陣雨': 'Rain Showers',
+    '雷陣雨': 'Thunderstorm',
+    '雷雨': 'Thunderstorm',
+    '霧': 'Fog',
+    '濃霧': 'Dense Fog',
+    '霾': 'Haze',
+};
+
 /**
  * Return a user-facing weather label.
- * Returns 'N/A' for null / sentinel values.
+ * In English mode, translates common CWA Traditional Chinese strings.
+ * Falls back to the raw string if no mapping exists.
+ * Returns 'N/A' / '無資料' for null / sentinel values.
  */
-export function getWeatherLabel(weather: string | null | undefined): string {
-    if (!weather || weather === '-99' || weather.trim() === '') return 'N/A';
+export function getWeatherLabel(weather: string | null | undefined, lang: Lang = 'zh-TW'): string {
+    if (!weather || weather === '-99' || weather.trim() === '') {
+        return lang === 'en' ? 'N/A' : '無資料';
+    }
+    if (lang === 'en') return WEATHER_EN[weather.trim()] ?? weather;
     return weather;
 }
 
@@ -112,9 +161,11 @@ const LEGEND_I18N = {
     en: {
         tempTitle: 'Temperature (°C)',
         humTitle: 'Humidity (%)',
-        wxTitle: 'Weather',
+        wxTitle: 'Conditions',
         windTitle: 'Wind Speed (m/s)',
         precipTitle: 'Precipitation (mm)',
+        pressureTitle: 'Air Pressure (hPa)',
+        uvTitle: 'UV Index',
         dry: 'Dry',
         humid: 'Humid',
         clear: 'Clear',
@@ -128,14 +179,25 @@ const LEGEND_I18N = {
         str: 'Str',
         gale: 'Gale',
         hvy: 'Hvy',
-        extrm: 'Extrm'
+        extrm: 'Extrm',
+        pressureLow: 'Low',
+        pressureNormal: 'Normal',
+        pressureHighNormal: 'High-Normal',
+        pressureHigh: 'High',
+        uvLow: 'Low',
+        uvModerate: 'Moderate',
+        uvHigh: 'High',
+        uvVeryHigh: 'Very High',
+        uvExtreme: 'Extreme',
     },
     'zh-TW': {
         tempTitle: '氣溫 (°C)',
         humTitle: '相對濕度 (%)',
-        wxTitle: '天氣狀態',
+        wxTitle: '天氣現象',
         windTitle: '陣風/風速 (m/s)',
         precipTitle: '降雨量 (mm)',
+        pressureTitle: '氣壓 (hPa)',
+        uvTitle: '紫外線指數',
         dry: '乾燥',
         humid: '潮濕',
         clear: '晴',
@@ -149,7 +211,16 @@ const LEGEND_I18N = {
         str: '強勁',
         gale: '疾風',
         hvy: '大雨',
-        extrm: '極端'
+        extrm: '極端',
+        pressureLow: '低壓',
+        pressureNormal: '正常',
+        pressureHighNormal: '偏高',
+        pressureHigh: '高壓',
+        uvLow: '低量級',
+        uvModerate: '中量級',
+        uvHigh: '高量級',
+        uvVeryHigh: '過量級',
+        uvExtreme: '危險級',
     }
 };
 
@@ -218,6 +289,29 @@ export function getLegendData(layer: DataLayer, lang: Lang = 'en'): LegendData {
                     { color: '#4C1D95', label: `≥ 50 ${t.extrm}` },
                 ],
             };
+        case 'pressure':
+            return {
+                title: t.pressureTitle,
+                type: 'gradient',
+                items: [
+                    { color: '#7DD3FC', label: `< 1000 ${t.pressureLow}` },
+                    { color: '#94A3B8', label: `1000–1010 ${t.pressureNormal}` },
+                    { color: '#FCD34D', label: `1010–1016 ${t.pressureHighNormal}` },
+                    { color: '#F97316', label: `≥ 1016 ${t.pressureHigh}` },
+                ],
+            };
+        case 'uvIndex':
+            return {
+                title: t.uvTitle,
+                type: 'gradient',
+                items: [
+                    { color: '#10B981', label: `0–2 ${t.uvLow}` },
+                    { color: '#FACC15', label: `3–5 ${t.uvModerate}` },
+                    { color: '#FB923C', label: `6–7 ${t.uvHigh}` },
+                    { color: '#EF4444', label: `8–10 ${t.uvVeryHigh}` },
+                    { color: '#8B5CF6', label: `≥ 11 ${t.uvExtreme}` },
+                ],
+            };
     }
 }
 
@@ -266,7 +360,7 @@ export function buildPopupHtml(obs: WeatherObservation, lang: Lang = 'en'): stri
     const visStr = vis !== null ? vis : '--';
     
     const symbol = getWeatherSymbol(obs.Weather);
-    const wxLabel = getWeatherLabel(obs.Weather);
+    const wxLabel = getWeatherLabel(obs.Weather, lang);
     const timeStr = obs.ObsTime
         ? new Date(obs.ObsTime).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
         : '--';

@@ -2,6 +2,7 @@ import './styles/style.css';
 import { WeatherService } from './services/WeatherService';
 import { MapManager } from './map/MapManager';
 import { LayerControl } from './ui/LayerControl';
+import { StationDetail } from './ui/StationDetail';
 import { messages } from './i18n/messages';
 import { Lang } from './domain/WeatherClassifier';
 
@@ -34,11 +35,13 @@ async function bootstrap() {
 
         hideStatus();
 
-        const mapManager = new MapManager('map');
+        const stationDetail = new StationDetail();
+
+        const mapManager = new MapManager('map', stationDetail);
         mapManager.init();
         mapManager.renderObservations(observations);
 
-        const layerControl = new LayerControl(mapManager);
+        const layerControl = new LayerControl(mapManager, stationDetail);
         layerControl.init();
         layerControl.updateHeader();
 

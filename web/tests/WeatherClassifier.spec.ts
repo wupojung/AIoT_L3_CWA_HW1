@@ -6,6 +6,8 @@ import {
     getWeatherSymbol,
     getWeatherLabel,
     getLegendData,
+    getAirPressureColor,
+    getUVIndexColor,
 } from '../src/domain/WeatherClassifier';
 
 // ── normalizeValue ────────────────────────────────────────────────────────────
@@ -167,26 +169,51 @@ describe('getWeatherSymbol', () => {
 // ── getWeatherLabel ───────────────────────────────────────────────────────────
 
 describe('getWeatherLabel', () => {
-    it('returns "N/A" for null', () => {
-        expect(getWeatherLabel(null)).toBe('N/A');
+    it('returns "N/A" for null in en mode', () => {
+        expect(getWeatherLabel(null, 'en')).toBe('N/A');
     });
 
-    it('returns "N/A" for undefined', () => {
-        expect(getWeatherLabel(undefined)).toBe('N/A');
+    it('returns "N/A" for undefined in en mode', () => {
+        expect(getWeatherLabel(undefined, 'en')).toBe('N/A');
     });
 
-    it('returns "N/A" for empty string', () => {
-        expect(getWeatherLabel('')).toBe('N/A');
+    it('returns "N/A" for empty string in en mode', () => {
+        expect(getWeatherLabel('', 'en')).toBe('N/A');
     });
 
-    it('returns "N/A" for sentinel "-99"', () => {
-        expect(getWeatherLabel('-99')).toBe('N/A');
+    it('returns "N/A" for sentinel "-99" in en mode', () => {
+        expect(getWeatherLabel('-99', 'en')).toBe('N/A');
     });
 
-    it('returns the original string for valid weather', () => {
+    it('returns Chinese raw string in zh-TW mode (default)', () => {
         expect(getWeatherLabel('晴時多雲')).toBe('晴時多雲');
         expect(getWeatherLabel('多雲')).toBe('多雲');
         expect(getWeatherLabel('陰天')).toBe('陰天');
+    });
+
+    it('returns "無資料" for null in zh-TW mode', () => {
+        expect(getWeatherLabel(null, 'zh-TW')).toBe('無資料');
+        expect(getWeatherLabel('-99', 'zh-TW')).toBe('無資料');
+    });
+
+    it('translates 多雲 to Partly Cloudy in en mode', () => {
+        expect(getWeatherLabel('多雲', 'en')).toBe('Partly Cloudy');
+    });
+
+    it('translates 晴 to Clear in en mode', () => {
+        expect(getWeatherLabel('晴', 'en')).toBe('Clear');
+    });
+
+    it('translates 陰 to Overcast in en mode', () => {
+        expect(getWeatherLabel('陰', 'en')).toBe('Overcast');
+    });
+
+    it('translates 雷陣雨 to Thunderstorm in en mode', () => {
+        expect(getWeatherLabel('雷陣雨', 'en')).toBe('Thunderstorm');
+    });
+
+    it('falls back to raw string for unmapped weather in en mode', () => {
+        expect(getWeatherLabel('特殊天氣', 'en')).toBe('特殊天氣');
     });
 });
 
@@ -218,11 +245,114 @@ describe('getLegendData', () => {
     it('returns weather legend with symbol items', () => {
         const data = getLegendData('weather');
         expect(data.type).toBe('symbols');
-        expect(data.title).toContain('Weather');
+        expect(data.title).toContain('Conditions');
         expect(data.items.length).toBeGreaterThan(0);
         data.items.forEach(item => {
             expect(typeof item.symbol).toBe('string');
             expect(typeof item.label).toBe('string');
         });
+    });
+
+    it('returns pressure legend with 4 gradient items', () => {
+        const data = getLegendData('pressure');
+        expect(data.type).toBe('gradient');
+        expect(data.title).toContain('Pressure');
+        expect(data.items).toHaveLength(4);
+        data.items.forEach(item => {
+            expect(typeof item.color).toBe('string');
+            expect(typeof item.label).toBe('string');
+        });
+    });
+
+    it('returns pressure legend in zh-TW with Chinese labels', () => {
+        const data = getLegendData('pressure', 'zh-TW');
+        expect(data.title).toBe('氣壓 (hPa)');
+        expect(data.items[0].label).toContain('低壓');
+        expect(data.items[1].label).toContain('正常');
+        expect(data.items[2].label).toContain('偏高');
+        expect(data.items[3].label).toContain('高壓');
+    });
+
+    it('returns uvIndex legend with 5 gradient items', () => {
+        const data = getLegendData('uvIndex');
+        expect(data.type).toBe('gradient');
+        expect(data.title).toContain('UV');
+        expect(data.items).toHaveLength(5);
+        data.items.forEach(item => {
+            expect(typeof item.color).toBe('string');
+            expect(typeof item.label).toBe('string');
+        });
+    });
+
+    it('returns uvIndex legend in zh-TW with CWA standard Chinese labels', () => {
+        const data = getLegendData('uvIndex', 'zh-TW');
+        expect(data.title).toBe('紫外線指數');
+        expect(data.items[0].label).toContain('低量級');
+        expect(data.items[1].label).toContain('中量級');
+        expect(data.items[2].label).toContain('高量級');
+        expect(data.items[3].label).toContain('過量級');
+        expect(data.items[4].label).toContain('危險級');
+    });
+
+    it('returns valid legend for all 7 DataLayer values', () => {
+        const layers: DataLayer[] = ['temperature', 'humidity', 'weather', 'windSpeed', 'precipitation', 'pressure', 'uvIndex'];
+        layers.forEach(layer => {
+            const data = getLegendData(layer);
+            expect(data.title).toBeTruthy();
+            expect(data.items.length).toBeGreaterThan(0);
+        });
+    });
+});
+
+// ── getAirPressureColor ───────────────────────────────────────────────────────
+
+describe('getAirPressureColor', () => {
+    it('returns light blue for low pressure (< 1000)', () => {
+        expect(getAirPressureColor(990)).toBe('#7DD3FC');
+        expect(getAirPressureColor(999.9)).toBe('#7DD3FC');
+    });
+
+    it('returns slate for normal pressure (1000–1009)', () => {
+        expect(getAirPressureColor(1000)).toBe('#94A3B8');
+        expect(getAirPressureColor(1005)).toBe('#94A3B8');
+    });
+
+    it('returns amber for high-normal (1010–1015)', () => {
+        expect(getAirPressureColor(1010)).toBe('#FCD34D');
+        expect(getAirPressureColor(1015)).toBe('#FCD34D');
+    });
+
+    it('returns orange for high pressure (>= 1016)', () => {
+        expect(getAirPressureColor(1016)).toBe('#F97316');
+        expect(getAirPressureColor(1025)).toBe('#F97316');
+    });
+});
+
+// ── getUVIndexColor ───────────────────────────────────────────────────────────
+
+describe('getUVIndexColor', () => {
+    it('returns green for UV 0–2 (Low)', () => {
+        expect(getUVIndexColor(0)).toBe('#10B981');
+        expect(getUVIndexColor(2)).toBe('#10B981');
+    });
+
+    it('returns yellow for UV 3–5 (Moderate)', () => {
+        expect(getUVIndexColor(3)).toBe('#FACC15');
+        expect(getUVIndexColor(5)).toBe('#FACC15');
+    });
+
+    it('returns orange for UV 6–7 (High)', () => {
+        expect(getUVIndexColor(6)).toBe('#FB923C');
+        expect(getUVIndexColor(7)).toBe('#FB923C');
+    });
+
+    it('returns red for UV 8–10 (Very High)', () => {
+        expect(getUVIndexColor(8)).toBe('#EF4444');
+        expect(getUVIndexColor(10)).toBe('#EF4444');
+    });
+
+    it('returns purple for UV >= 11 (Extreme)', () => {
+        expect(getUVIndexColor(11)).toBe('#8B5CF6');
+        expect(getUVIndexColor(14)).toBe('#8B5CF6');
     });
 });

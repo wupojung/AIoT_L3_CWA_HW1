@@ -12,11 +12,9 @@ function Invoke-CwaRequest {
     Write-Host "Fetching CWA dataset '$DatasetId'..."
 
     try {
-        $tempFile = [System.IO.Path]::GetTempFileName()
-        $ProgressPreference = 'SilentlyContinue'
-        Invoke-WebRequest -Uri $uri -Method Get -UseBasicParsing -OutFile $tempFile -ErrorAction Stop
-        $jsonString = [System.IO.File]::ReadAllText($tempFile, [System.Text.Encoding]::UTF8)
-        Remove-Item $tempFile -ErrorAction Ignore
+        $wc = [System.Net.WebClient]::new()
+        $wc.Encoding = [System.Text.Encoding]::UTF8
+        $jsonString = $wc.DownloadString($uri)
         return ($jsonString | ConvertFrom-Json)
     }
     catch {

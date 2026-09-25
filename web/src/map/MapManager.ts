@@ -9,8 +9,11 @@ import {
     getWeatherSymbol,
     getWindSpeedColor,
     getPrecipitationColor,
+    getAirPressureColor,
+    getUVIndexColor,
     buildPopupHtml,
 } from '../domain/WeatherClassifier';
+import { StationDetail } from '../ui/StationDetail';
 
 // ── Basemap tile providers ────────────────────────────────────────────────────
 // VITE_CARTO_API_KEY is injected by Vite from .env at build time.
@@ -58,12 +61,14 @@ export class MapManager {
     private weatherLayer: L.LayerGroup = L.layerGroup();
     private windSpeedLayer: L.LayerGroup = L.layerGroup();
     private precipitationLayer: L.LayerGroup = L.layerGroup();
+    private pressureLayer: L.LayerGroup = L.layerGroup();
+    private uvIndexLayer: L.LayerGroup = L.layerGroup();
 
     private activeDataLayer: DataLayer = 'temperature';
     private currentLang: Lang = 'en';
     private observations: WeatherObservation[] = [];
 
-    constructor(private elementId: string) {}
+    constructor(private elementId: string, private stationDetail?: StationDetail) {}
 
     init() {
         this.map = L.map(this.elementId, {
@@ -100,7 +105,7 @@ export class MapManager {
         this.activeDataLayer = layer;
 
         // Single-active-layer model: remove all, add only the selected one
-        const all = [this.temperatureLayer, this.humidityLayer, this.weatherLayer, this.windSpeedLayer, this.precipitationLayer];
+        const all = [this.temperatureLayer, this.humidityLayer, this.weatherLayer, this.windSpeedLayer, this.precipitationLayer, this.pressureLayer, this.uvIndexLayer];
         all.forEach(lg => {
             if (this.map!.hasLayer(lg)) this.map!.removeLayer(lg);
         });
@@ -112,6 +117,12 @@ export class MapManager {
         // Re-render layers to update popup language
         if (this.observations.length > 0) {
             this.renderObservations(this.observations);
+        }
+    }
+
+    private openDetail(obs: WeatherObservation) {
+        if (this.stationDetail) {
+            this.stationDetail.open(obs, this.currentLang);
         }
     }
 
@@ -139,6 +150,8 @@ export class MapManager {
         this.buildWeatherLayer(observations);
         this.buildWindSpeedLayer(observations);
         this.buildPrecipitationLayer(observations);
+        this.buildPressureLayer(observations);
+        this.buildUVIndexLayer(observations);
 
         // Re-apply active layer to ensure it is visible
         this.setDataLayer(this.activeDataLayer);
@@ -153,6 +166,8 @@ export class MapManager {
             case 'weather':     return this.weatherLayer;
             case 'windSpeed':   return this.windSpeedLayer;
             case 'precipitation': return this.precipitationLayer;
+            case 'pressure':    return this.pressureLayer;
+            case 'uvIndex':     return this.uvIndexLayer;
         }
     }
 
@@ -166,43 +181,44 @@ export class MapManager {
         });
     }
 
+    // ── Shared marker builder ─────────────────────────────────────────────────
+
+    private addMarker(
+        obs: WeatherObservation,
+        icon: L.DivIcon | L.Icon,
+        layerGroup: L.LayerGroup
+    ) {
+        const lat = Number(obs.Latitude);
+        const lon = Number(obs.Longitude);
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        const marker = L.marker([lat, lon], { icon });
+        marker.bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 });
+        marker.on('click', () => {
+            this.openDetail(obs);
+        });
+        marker.addTo(layerGroup);
+    }
+
     private buildTemperatureLayer(observations: WeatherObservation[]) {
         this.temperatureLayer.clearLayers();
         observations.forEach(obs => {
-            const lat = Number(obs.Latitude);
-            const lon = Number(obs.Longitude);
-            if (isNaN(lat) || isNaN(lon)) return;
-
-            const temp = normalizeValue(obs.Temperature);
+            const temp  = normalizeValue(obs.Temperature);
             const label = temp !== null ? `${temp}°` : '--';
             const color = temp !== null ? getTempColor(temp) : '#64748B';
-
-            const icon = this.makeIcon(
-                `<div class="temp-marker" style="background-color:${color}">${label}</div>`
-            );
-            L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
-                .addTo(this.temperatureLayer);
+            const icon  = this.makeIcon(`<div class="temp-marker" style="background-color:${color}">${label}</div>`);
+            this.addMarker(obs, icon, this.temperatureLayer);
         });
     }
 
     private buildHumidityLayer(observations: WeatherObservation[]) {
         this.humidityLayer.clearLayers();
         observations.forEach(obs => {
-            const lat = Number(obs.Latitude);
-            const lon = Number(obs.Longitude);
-            if (isNaN(lat) || isNaN(lon)) return;
-
-            const hum = normalizeValue(obs.Humidity);
+            const hum   = normalizeValue(obs.Humidity);
             const label = hum !== null ? `${hum}%` : '--';
             const color = hum !== null ? getHumidityColor(hum) : '#64748B';
-
-            const icon = this.makeIcon(
-                `<div class="hum-marker" style="background-color:${color}">${label}</div>`
-            );
-            L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
-                .addTo(this.humidityLayer);
+            const icon  = this.makeIcon(`<div class="hum-marker" style="background-color:${color}">${label}</div>`);
+            this.addMarker(obs, icon, this.humidityLayer);
         });
     }
 
@@ -214,7 +230,6 @@ export class MapManager {
             if (isNaN(lat) || isNaN(lon)) return;
 
             const symbol = getWeatherSymbol(obs.Weather);
-
             const icon = L.divIcon({
                 className: 'custom-marker-wrapper',
                 html: `<div class="wx-marker">${symbol}</div>`,
@@ -222,49 +237,60 @@ export class MapManager {
                 iconAnchor:  [17, 17],
                 popupAnchor: [0, -17],
             });
-            L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
-                .addTo(this.weatherLayer);
+            this.addMarker(obs, icon, this.weatherLayer);
         });
     }
 
     private buildWindSpeedLayer(observations: WeatherObservation[]) {
         this.windSpeedLayer.clearLayers();
         observations.forEach(obs => {
-            const lat = Number(obs.Latitude);
-            const lon = Number(obs.Longitude);
-            if (isNaN(lat) || isNaN(lon)) return;
-
             const speed = normalizeValue(obs.WindSpeed);
             const label = speed !== null ? `${speed}` : '--';
             const color = speed !== null ? getWindSpeedColor(speed) : '#64748B';
-
-            const icon = this.makeIcon(
+            const icon  = this.makeIcon(
                 `<div class="wind-marker" style="background-color:${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: #1e293b; font-weight: 600; font-size: 11px;">${label}</div>`
             );
-            L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
-                .addTo(this.windSpeedLayer);
+            this.addMarker(obs, icon, this.windSpeedLayer);
         });
     }
 
     private buildPrecipitationLayer(observations: WeatherObservation[]) {
         this.precipitationLayer.clearLayers();
         observations.forEach(obs => {
-            const lat = Number(obs.Latitude);
-            const lon = Number(obs.Longitude);
-            if (isNaN(lat) || isNaN(lon)) return;
-
             const precip = normalizeValue(obs.Precipitation);
-            const label = precip !== null ? `${precip}` : '--';
-            const color = precip !== null ? getPrecipitationColor(precip) : '#64748B';
-
-            const icon = this.makeIcon(
+            const label  = precip !== null ? `${precip}` : '--';
+            const color  = precip !== null ? getPrecipitationColor(precip) : '#64748B';
+            const icon   = this.makeIcon(
                 `<div class="precip-marker" style="background-color:${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 11px; box-shadow: 0 1px 3px rgba(0,0,0,0.5);">${label}</div>`
             );
-            L.marker([lat, lon], { icon })
-                .bindPopup(buildPopupHtml(obs, this.currentLang), { maxWidth: 260 })
-                .addTo(this.precipitationLayer);
+            this.addMarker(obs, icon, this.precipitationLayer);
+        });
+    }
+
+    private buildPressureLayer(observations: WeatherObservation[]) {
+        this.pressureLayer.clearLayers();
+        observations.forEach(obs => {
+            const pressure = normalizeValue(obs.AirPressure);
+            const label    = pressure !== null ? `${pressure}` : '--';
+            const color    = pressure !== null ? getAirPressureColor(pressure) : '#64748B';
+            const icon     = this.makeIcon(
+                `<div class="pressure-marker" style="background-color:${color}; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; color: #1e293b; font-weight: 700; font-size: 9px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border: 1.5px solid rgba(255,255,255,0.4);">${label}</div>`
+            );
+            this.addMarker(obs, icon, this.pressureLayer);
+        });
+    }
+
+    private buildUVIndexLayer(observations: WeatherObservation[]) {
+        this.uvIndexLayer.clearLayers();
+        observations.forEach(obs => {
+            const uv        = normalizeValue(obs.UVIndex);
+            const label     = uv !== null ? `${uv}` : '--';
+            const color     = uv !== null ? getUVIndexColor(uv) : '#64748B';
+            const textColor = uv !== null && uv <= 2 ? '#1e293b' : 'white';
+            const icon      = this.makeIcon(
+                `<div class="uv-marker" style="background-color:${color}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: ${textColor}; font-weight: 700; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.4);">${label}</div>`
+            );
+            this.addMarker(obs, icon, this.uvIndexLayer);
         });
     }
 }

@@ -20,12 +20,35 @@ export const messages = {
         hum: '相對濕度',
         wx: '天氣現象',
         wind: '陣風/風速',
+        pressure: '氣壓',
+        uv: '紫外線',
         precip: '降雨量',
         
         // Status
         loading: '正在載入氣象觀測資料…',
         noData: '暫無觀測資料',
         failed: '氣象資料載入失敗',
+        
+        // Station Detail
+        detailTitle: '測站詳情',
+        currentConditions: '目前天氣',
+        windSection: '風況',
+        today: '今日',
+        stationInfo: '測站資訊',
+        windDir: '風向',
+        windSpeed: '風速',
+        maxWind: '最大10分鐘平均風速',
+        gust: '瞬間最大陣風',
+        dailyHigh: '今日最高氣溫',
+        dailyLow: '今日最低氣溫',
+        visibility: '能見度',
+        sunshine: '日照時數',
+        altitude: '海拔高度',
+        coordinates: '座標',
+        stationId: '站號',
+        obsTime: '觀測時間',
+        viewDetails: '詳細資料 ›',
+        close: '關閉',
         
         // Aria labels
         ariaAppTitle: '應用程式標題',
@@ -38,7 +61,11 @@ export const messages = {
         ariaHum: '相對濕度圖層',
         ariaWx: '天氣現象圖層',
         ariaWind: '陣風/風速圖層',
+        ariaPressure: '氣壓圖層',
+        ariaUV: '紫外線圖層',
         ariaPrecip: '降雨量圖層',
+        ariaStationDetail: '測站詳情',
+        ariaCloseDetail: '關閉測站詳情',
         
         // Browser Title
         browserTitle: 'TW Sky｜島嶼氣象圖譜'
@@ -62,12 +89,35 @@ export const messages = {
         hum: 'Humidity',
         wx: 'Conditions',
         wind: 'Wind Speed',
+        pressure: 'Pressure',
+        uv: 'UV Index',
         precip: 'Precipitation',
         
         // Status
         loading: 'Loading weather observations…',
         noData: 'No observations available',
         failed: 'Failed to load weather data',
+        
+        // Station Detail
+        detailTitle: 'Station Detail',
+        currentConditions: 'Current Conditions',
+        windSection: 'Wind',
+        today: 'Today',
+        stationInfo: 'Station',
+        windDir: 'Direction',
+        windSpeed: 'Speed',
+        maxWind: 'Max 10-Min Avg Wind',
+        gust: 'Peak Gust',
+        dailyHigh: 'Daily High',
+        dailyLow: 'Daily Low',
+        visibility: 'Visibility',
+        sunshine: 'Sunshine',
+        altitude: 'Altitude',
+        coordinates: 'Coordinates',
+        stationId: 'Station ID',
+        obsTime: 'Observation Time',
+        viewDetails: 'Details ›',
+        close: 'Close',
         
         // Aria labels
         ariaAppTitle: 'Application title',
@@ -80,7 +130,11 @@ export const messages = {
         ariaHum: 'Humidity layer',
         ariaWx: 'Weather conditions layer',
         ariaWind: 'Wind Speed layer',
+        ariaPressure: 'Pressure layer',
+        ariaUV: 'UV Index layer',
         ariaPrecip: 'Precipitation layer',
+        ariaStationDetail: 'Station detail',
+        ariaCloseDetail: 'Close station detail',
         
         // Browser Title
         browserTitle: 'TW Sky — Live Weather Atlas'
