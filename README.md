@@ -24,8 +24,6 @@ v1.0.0 是目前第一個完整 baseline release：資料管線、GIS frontend�
 
 ---
 
----
-
 ## Overview
 
 本專案的核心資料流程：
@@ -343,8 +341,6 @@ Traditional Chinese language
 
 - [CHANGELOG.md](CHANGELOG.md)
 - [Technology Decisions](docs/technology-decisions.md)
-
----
 
 ---
 
