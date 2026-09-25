@@ -60,12 +60,16 @@ Describe "CwaClient API HTTP Tests" {
     }
 
     It "Handles Successful response" {
-        # Simulate Invoke-WebRequest writing a valid JSON fixture to -OutFile
-        $fixture = Get-Content "$PSScriptRoot\fixtures\valid_response.json" -Raw -Encoding UTF8
-
+        # Keep this HTTP-boundary test focused on a successful response.
+        # Parser coverage for the full fixture is verified separately above.
         Mock Invoke-WebRequest {
             param($Uri, $Method, $UseBasicParsing, $OutFile, $ErrorAction)
-            [System.IO.File]::WriteAllText($OutFile, $Using:fixture, [System.Text.Encoding]::UTF8)
+
+            [System.IO.File]::WriteAllText(
+                $OutFile,
+                '{"success":"true","records":{"Station":[]}}',
+                [System.Text.UTF8Encoding]::new($false)
+            )
         } -ModuleName CwaClient
 
         $resp = Invoke-CwaRequest -DatasetId "O-A0003-001" -ApiKey "mock_key"
