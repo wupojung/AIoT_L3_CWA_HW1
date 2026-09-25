@@ -2,80 +2,274 @@
 
 [![CI](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml)
 
-以中央氣象署（CWA）Open Data 為資料來源的課程專案。專案目標是建立可測試、可持續整合、可部署的 Taiwan Weather GIS Web。
+以中央氣象署（CWA）Open Data 為資料來源的 Taiwan Weather GIS Web。  
+專案採用 **PowerShell + SQLite** 建立資料管線，並以 **Vite + TypeScript + Leaflet** 建立前端 GIS，搭配 **Pester、Vitest 與 GitHub Actions** 提供可重複驗證的開發流程。
 
-> **CI Badge** 代表目前整個 repository 的日常健康狀態；**Gate Badges** 代表各 Gate 的自動化里程碑驗證。正式 Gate PASS 仍需符合 `myplan/workflow.md` 中要求的 Manual Verification。
+> 上方 **CI Badge** 代表目前整個 repository 的日常健康狀態；各 Gate 的驗證狀態請見 [Development Status](#development-status)。
 
-## Project Overview
+---
 
-核心資料流程：
+## Overview
+
+本專案的核心資料流程：
 
 ~~~text
 CWA Open Data
     ↓
-API Client
+PowerShell API Client / Parser
     ↓
-Parser / Transformer
+ETL
     ↓
 SQLite
     ↓
-Taiwan GIS Web
+Static weather.json
     ↓
-GitHub Actions CI
+Vite + TypeScript
+    ↓
+Leaflet Taiwan GIS
+    ↓
+GitHub Actions
     ↓
 Vercel
 ~~~
 
-## Project Goal
+目前使用的 CWA dataset 為：
 
-- 使用真實 CWA Open Data，不以假天氣資料取代正式整合。
-- 取得並理解真實 API Response 後再設計 Parser 與資料模型。
-- 建立 ETL + SQLite 資料層。
-- 將台灣地區氣象資訊呈現在 GIS Web。
-- 以 Automated Tests、Manual Verification 與 GitHub Actions 提供可重複的 PASS 證據。
-- 完成 Vercel Deployment 與 Production Smoke Test。
+~~~text
+O-A0003-001
+~~~
 
-## Architecture Overview
+此資料屬於 **Current Weather Observation（目前天氣觀測）**，不是 forecast data。
 
-詳細架構請見 [docs/architecture.md](docs/architecture.md)。
+### Project Goals
+
+- 使用真實 CWA Open Data。
+- 不在前端暴露 CWA API Key。
+- 以 SQLite 建立可驗證、可重建的資料層。
+- 將 SQLite 資料輸出為 frontend-friendly JSON。
+- 以 Leaflet 呈現台灣氣象測站資訊。
+- 建立可在 clean checkout 中重現的 automated tests。
+- 使用 GitHub Actions 提供 Gate verification 與 overall CI。
+- 最終部署至 Vercel。
+
+---
 
 ## Technology Stack
 
-| Area | Current Decision |
+| Area | Technology |
 | --- | --- |
 | Data Source | CWA Open Data |
 | Data / ETL | PowerShell |
 | Database | SQLite |
 | Data Contract | Static JSON |
+| Frontend Runtime | Node.js |
+| Build Tool | Vite |
+| Language | TypeScript |
 | GIS | Leaflet |
-| Frontend | Vite + TypeScript |
-| Testing | Pester 6.2.0 + Vitest |
+| PowerShell Testing | Pester 6.2.0 |
+| Frontend Testing | Vitest |
 | CI | GitHub Actions |
 | Deployment | Vercel |
 
-尚未確認的技術不提前假設；實作時依 Gate 需求與驗證結果決定。
+---
 
-## Five-Gate Workflow
+## Prerequisites
 
-~~~text
-Gate 1 — CWA API
-Gate 2 — ETL & SQLite
-Gate 3 — Taiwan GIS Web
-Gate 4 — GitHub & Continuous Integration
-Gate 5 — Vercel Deployment
+建議本機開發環境：
+
+| Requirement | Recommended Version / Note |
+| --- | --- |
+| Git | Current stable version |
+| Windows | Windows 10 / 11 recommended |
+| PowerShell | PowerShell 7+ recommended |
+| Node.js | **20.x**（與目前 GitHub Actions CI 一致） |
+| npm | 隨 Node.js 安裝 |
+| Pester | **6.2.0** |
+| CWA API Key | Full data pipeline 必要 |
+
+> Gate 1 / Gate 2 目前的 SQLite helper 使用 Windows `winsqlite3.dll`，因此完整資料管線目前以 **Windows** 為主要 local development environment。  
+> Gate 3 frontend 則可在任何支援 Node.js 的環境執行。
+
+確認 Node.js 與 npm：
+
+~~~bash
+node --version
+npm --version
 ~~~
 
-每一 Gate 都遵守：
+確認 PowerShell：
 
-~~~text
-BUILD → RUN → TEST → VERIFY → PASS → NEXT GATE
+~~~powershell
+$PSVersionTable.PSVersion
 ~~~
 
-Testing 與 Continuous Integration 都是跨 Gate 品質機制。CI 不等待 Gate 4 才開始；只要產生可重複執行的 Automated Tests，就應納入 GitHub Actions。
+---
 
-Gate 4 的角色是 **CI Hardening / Final Repository Verification**，而不是第一次建立 CI。
+## Quick Start
 
-詳細 Gate Contract 請見 [myplan/workflow.md](myplan/workflow.md)。
+### Option A — Frontend Preview
+
+如果 repository 中已經存在：
+
+~~~text
+web/public/weather.json
+~~~
+
+只想啟動目前 GIS 畫面，不需要重新呼叫 CWA API。
+
+~~~bash
+cd web
+npm ci
+npm run dev
+~~~
+
+Vite 會顯示 local development URL，例如：
+
+~~~text
+http://localhost:5173
+~~~
+
+這個模式需要：
+
+~~~text
+Node.js + npm
+~~~
+
+不需要 CWA API Key。
+
+---
+
+### Option B — Full Data Pipeline
+
+若要從 CWA 重新取得最新資料並完整重建：
+
+~~~text
+CWA
+ ↓
+ETL
+ ↓
+SQLite
+ ↓
+weather.json
+ ↓
+Vite GIS
+~~~
+
+#### 1. Clone Repository
+
+~~~bash
+git clone https://github.com/wupojung/AIoT_L3_CWA_HW1.git
+cd AIoT_L3_CWA_HW1
+~~~
+
+#### 2. Create Local Environment File
+
+使用 PowerShell：
+
+~~~powershell
+Copy-Item .env.example .env
+~~~
+
+編輯：
+
+~~~env
+CWA_API_KEY=<YOUR_CWA_API_KEY>
+~~~
+
+`.env` 已由 `.gitignore` 排除，不得 commit。
+
+#### 3. Run ETL
+
+~~~powershell
+./src/Run-Etl.ps1
+~~~
+
+成功後應產生：
+
+~~~text
+data/weather.db
+~~~
+
+#### 4. Export SQLite to JSON
+
+~~~powershell
+./src/Export-WeatherJson.ps1
+~~~
+
+成功後應產生 / 更新：
+
+~~~text
+web/public/weather.json
+~~~
+
+#### 5. Install Frontend Dependencies
+
+~~~bash
+cd web
+npm ci
+~~~
+
+#### 6. Start GIS Web
+
+~~~bash
+npm run dev
+~~~
+
+---
+
+## Available Commands
+
+### PowerShell
+
+Run ETL:
+
+~~~powershell
+./src/Run-Etl.ps1
+~~~
+
+Export frontend JSON:
+
+~~~powershell
+./src/Export-WeatherJson.ps1
+~~~
+
+Run all Pester tests:
+
+~~~powershell
+Invoke-Pester -Path ./tests -Output Detailed
+~~~
+
+CI-compatible Pester command:
+
+~~~powershell
+Invoke-Pester -Path ./tests -CI -Output Detailed
+~~~
+
+### Frontend
+
+在 `web/`：
+
+~~~bash
+npm ci
+npm run dev
+npm run test -- --run
+npm run build
+npm run preview
+~~~
+
+TypeScript validation:
+
+~~~bash
+npx tsc --noEmit
+~~~
+
+Production build output：
+
+~~~text
+web/dist/
+~~~
+
+---
 
 ## Development Status
 
@@ -87,236 +281,295 @@ Gate 4 的角色是 **CI Hardening / Final Repository Verification**，而不是
 | Gate 4 — GitHub & Continuous Integration | PENDING |
 | Gate 5 — Vercel Deployment | PENDING |
 
-> Gate Badge 代表該 Gate 的 Automated Verification 狀態；正式 Gate PASS 仍須符合 `myplan/workflow.md` 中要求的 Manual Verification。
+> Gate Badge 代表該 Gate 的 **Automated Verification** 狀態；正式 Gate PASS 仍須符合 `myplan/workflow.md` 中要求的 Manual Verification。
 
-## Gate 1 Verification
+---
 
-`gate1-api.yml` 驗證：
+## Five-Gate Development Workflow
 
 ~~~text
-GitHub Repository Secret
+Gate 1 — CWA API
         ↓
-Real CWA API
+Gate 2 — ETL & SQLite
         ↓
-CwaClient / Parser
+Gate 3 — Taiwan GIS Web
         ↓
-Station records
+Gate 4 — GitHub & Continuous Integration
         ↓
-Required ID / Name / Coordinates
-        ↓
-Gate 1 Automated Verification
+Gate 5 — Vercel Deployment
 ~~~
 
-Gate 1 不負責 SQLite、GIS 或 frontend。
-
-## Gate 2 Verification
-
-`gate2-integration.yml` 驗證：
+每個 Gate 固定遵守：
 
 ~~~text
-GitHub Repository Secret
-        ↓
-Real CWA API
-        ↓
-PowerShell Parser / ETL
-        ↓
-SQLite weather.db
-        ↓
-Database Query Verification
-        ↓
-Gate 2 Automated Verification
+BUILD
+  ↓
+RUN
+  ↓
+TEST
+  ↓
+VERIFY
+  ↓
+PASS
+  ↓
+NEXT GATE
 ~~~
 
-最近一次已確認的 Gate 2 integration evidence：
-
-- Repository Secret `CWA_API_KEY` 可由 GitHub Actions 正常注入。
-- Real CWA API → ETL：PASS。
-- Parsed stations：363。
-- SQLite `weather_observations` rows：363。
-- Unique `StationId` rows：363。
-- Missing `StationId`：0。
-
-## Gate 3 Verification
-
-`gate3-gis.yml` 不重新呼叫 CWA API，而是驗證 Gate 2 → Gate 3 的資料契約與 frontend：
+若驗證失敗：
 
 ~~~text
-Temporary SQLite
-        ↓
-Export-WeatherJson
-        ↓
-JSON Contract Test
+FAIL
+ ↓
+FIX
+ ↓
+TEST AGAIN
+~~~
+
+詳細規範請見 [myplan/workflow.md](myplan/workflow.md)。
+
+---
+
+## CI Architecture
+
+本專案將 **Overall CI** 與 **Gate Verification** 分開。
+
+### Overall CI
+
+`.github/workflows/ci.yml`
+
+每次 Push / Pull Request 執行：
+
+~~~text
+Repository Baseline
         +
-Tracked weather.json Validation
+PowerShell Syntax / Pester
+        +
+SQLite / Export Tests
+        +
+TypeScript Validation
+        +
+Vitest
+        +
+Vite Production Build
+        ↓
+Overall CI PASS / FAIL
+~~~
+
+Overall CI 以 deterministic tests 為主，不在每次 push 呼叫真實 CWA API。
+
+### Gate 1 — CWA API
+
+`gate1-api.yml`
+
+~~~text
+Repository Secret
+      ↓
+Real CWA API
+      ↓
+Parser
+      ↓
+Required Fields
+      ↓
+PASS / FAIL
+~~~
+
+### Gate 2 — ETL & SQLite
+
+`gate2-integration.yml`
+
+~~~text
+Real CWA API
+      ↓
+PowerShell ETL
+      ↓
+SQLite
+      ↓
+Row / Unique ID Verification
+      ↓
+PASS / FAIL
+~~~
+
+### Gate 3 — Taiwan GIS Web
+
+`gate3-gis.yml`
+
+~~~text
+SQLite → JSON Contract
+        +
+Tracked weather.json
         ↓
 TypeScript
         ↓
 Vitest
         ↓
-Vite Production Build
+Vite Build
         ↓
-dist/index.html + dist/weather.json
-        ↓
-Gate 3 Automated Verification
-~~~
-
-Gate 3 的自動化 Badge 綠燈後，仍需要依 `myplan/workflow.md` 完成實際 Taiwan GIS 畫面、marker / popup、location mapping 與 loading / empty / error 等 Manual Verification，才正式宣告 Gate 3 PASS。
-
-## Testing Strategy
-
-目前 PowerShell Automated Tests 使用 **Pester 6.2.0**。
-
-主要測試：
-
-- CWA Client / Parser
-- SQLite layer
-- ETL / Transformer
-- 後續 Application Logic
-
-測試程式放在：
-
-~~~text
-tests/
-~~~
-
-GitHub Actions 不另外實作一套 Tests，而是執行與 Local Development 相同的 Test Suite。
-
-### Local
-
-~~~powershell
-Invoke-Pester -Path ./tests -Output Detailed
-~~~
-
-### Continuous Integration
-
-~~~powershell
-Invoke-Pester -Path ./tests -CI -Output Detailed
-~~~
-
-Frontend CI 使用：
-
-~~~bash
-npm ci
-npx tsc --noEmit
-npm run test -- --run
-npm run build
-~~~
-
-CI 使用 `package-lock.json` 與 `npm ci`，確保 clean clone 的 dependency installation 可重現。
-
-流程：
-
-~~~text
-Code
- ↓
-Local Pester
- ↓
-Commit / Push
- ↓
-GitHub Actions
- ↓
-Pester
- ↓
 PASS / FAIL
 ~~~
 
+---
+
+## Testing Strategy
+
+### PowerShell / Data Layer
+
+主要驗證：
+
+- CWA Client / Parser
+- HTTP error handling
+- PowerShell syntax
+- SQLite schema
+- SQLite operations
+- JSON export contract
+- Missing database behavior
+
+使用：
+
+~~~text
+Pester 6.2.0
+~~~
+
+### Frontend
+
+主要驗證：
+
+- Weather data parsing
+- Application logic
+- TypeScript correctness
+- Vite production build
+
+使用：
+
+~~~text
+Vitest
+TypeScript
+Vite
+~~~
+
+不測試 Leaflet library internals。
+
 詳細測試規範請見 [docs/testing.md](docs/testing.md)。
+
+---
 
 ## Project Structure
 
 ~~~text
-README.md
-.gitignore
-.env.example
-
-myplan/
-└── workflow.md
-
-docs/
-├── architecture.md
-└── testing.md
-
-src/
-├── CwaClient.psm1
-├── SQLiteHelper.psm1
-├── Run-Etl.ps1
-├── Export-WeatherJson.ps1
-└── schema.sql
-
-tests/
-├── CwaClient.Tests.ps1
-├── SQLiteHelper.Tests.ps1
-├── Export-WeatherJson.Tests.ps1
-├── PowerShellSyntax.Tests.ps1
-└── fixtures/
-
-web/
-├── package.json
-├── package-lock.json
-├── public/
-│   └── weather.json
+AIoT_L3_CWA_HW1/
+├── README.md
+├── .env.example
+├── .gitignore
+│
+├── myplan/
+│   └── workflow.md
+│
+├── docs/
+│   ├── architecture.md
+│   └── testing.md
+│
 ├── src/
-└── tests/
-
-.github/
-└── workflows/
-    ├── ci.yml
-    ├── gate1-api.yml
-    ├── gate2-integration.yml
-    └── gate3-gis.yml
+│   ├── CwaClient.psm1
+│   ├── SQLiteHelper.psm1
+│   ├── Run-Etl.ps1
+│   ├── Export-WeatherJson.ps1
+│   └── schema.sql
+│
+├── tests/
+│   ├── CwaClient.Tests.ps1
+│   ├── SQLiteHelper.Tests.ps1
+│   ├── Export-WeatherJson.Tests.ps1
+│   ├── PowerShellSyntax.Tests.ps1
+│   └── fixtures/
+│
+├── web/
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   ├── public/
+│   │   └── weather.json
+│   ├── src/
+│   └── tests/
+│
+└── .github/
+    └── workflows/
+        ├── ci.yml
+        ├── gate1-api.yml
+        ├── gate2-integration.yml
+        └── gate3-gis.yml
 ~~~
 
-## Setup
+---
 
-目前 Application implementation 仍依 Gate 漸進建立。請使用 PowerShell 開發環境，並於本機安裝專案指定版本 Pester。
+## Environment Variables & Security
 
-~~~powershell
-Install-Module Pester -RequiredVersion 6.2.0 -Scope CurrentUser -Force
-Import-Module Pester -RequiredVersion 6.2.0 -Force
-~~~
+### Local Development
 
-## Environment Variables
-
-本機 Secret 使用 `.env`，但 `.env` **不得 Commit 到 GitHub**。
-
-範例：
+本機使用：
 
 ~~~env
 CWA_API_KEY=<YOUR_CWA_API_KEY>
 ~~~
 
-請由 `.env.example` 建立本機 `.env`。
+存放於：
 
-真正 API Key 不得寫入：
+~~~text
+.env
+~~~
+
+真正的 API Key 不得出現在：
 
 - Source Code
 - README
 - Markdown 文件
 - Test Fixture
 - Git history
+- GitHub Actions logs
 
-GitHub Actions 的 Gate 1 / Gate 2 real integration workflows 使用 **GitHub Actions Secrets**：
+### GitHub Actions
+
+Gate 1 / Gate 2 使用 GitHub Repository Secret：
 
 ~~~text
 CWA_API_KEY
 ~~~
 
-並由 workflow 以 `${{ secrets.CWA_API_KEY }}` 注入環境變數，而不是上傳 `.env`。
+Workflow 透過：
 
-日常 `ci.yml` 與 Gate 3 deterministic verification 不需要 CWA Secret；Gate 1 / Gate 2 才會使用 Repository Secret 呼叫真實 CWA API。
-
-## Running Tests
-
-~~~powershell
-Invoke-Pester -Path ./tests -Output Detailed
+~~~text
+${{ secrets.CWA_API_KEY }}
 ~~~
 
-新的或修改過的 Tests 採用 Pester 6 推薦的 `Should-*` assertions，例如：
+注入環境變數。
 
-~~~powershell
-$result.Count | Should-Be 1
-{ Invoke-Something } | Should-Throw
+日常 `ci.yml` 與 Gate 3 verification 不需要 CWA Secret。
+
+---
+
+## Deployment
+
+最終目標平台：
+
+~~~text
+Vercel
 ~~~
+
+Gate 3 使用 Vite 產生：
+
+~~~text
+web/dist/
+~~~
+
+Gate 5 將以 production deployment + smoke test 驗證：
+
+- Public URL reachable
+- GIS loads correctly
+- `weather.json` 可正常讀取
+- 無 blocking runtime error
+- Secret 未暴露
+
+---
 
 ## Documentation
 
@@ -324,6 +577,14 @@ $result.Count | Should-Be 1
 - [Architecture](docs/architecture.md)
 - [Testing Strategy](docs/testing.md)
 
-## Deployment
+---
 
-Gate 5 使用 Vercel。Deployment 前必須先完成 Gate 4 CI 驗證；Production PASS 需要 Public URL 與 Smoke Test 證據。
+## Design Principles
+
+- Keep it simple.
+- Do not over-engineer.
+- Production weather data must come from real CWA data.
+- UI does not directly call the CWA API.
+- Secrets never enter frontend source code.
+- Automated tests are required evidence, not optional documentation.
+- A green badge is automated evidence; manual verification is still required where the Gate contract specifies it.
