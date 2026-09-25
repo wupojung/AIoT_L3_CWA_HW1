@@ -12,7 +12,12 @@ function Invoke-CwaRequest {
     Write-Host "Fetching CWA dataset '$DatasetId'..."
 
     try {
-        return Invoke-RestMethod -Uri $uri -Method Get -ErrorAction Stop
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest -Uri $uri -Method Get -UseBasicParsing -OutFile $tempFile -ErrorAction Stop
+        $jsonString = [System.IO.File]::ReadAllText($tempFile, [System.Text.Encoding]::UTF8)
+        Remove-Item $tempFile -ErrorAction Ignore
+        return ($jsonString | ConvertFrom-Json)
     }
     catch {
         # Do not expose the API key in logs even if an exception contains the request URI.
@@ -62,8 +67,8 @@ function ConvertFrom-CwaResponse {
             Latitude = &$f ($wgs84.StationLatitude)
             Longitude = &$f ($wgs84.StationLongitude)
             StationAltitude = &$f ($station.GeoInfo.StationAltitude)
-            CountyName = &$f ($station.GeoInfo.CountyName)
-            TownName = &$f ($station.GeoInfo.TownName)
+            County = &$f ($station.GeoInfo.CountyName)
+            Township = &$f ($station.GeoInfo.TownName)
             CountyCode = &$f ($station.GeoInfo.CountyCode)
             TownCode = &$f ($station.GeoInfo.TownCode)
 
@@ -73,8 +78,8 @@ function ConvertFrom-CwaResponse {
             Precipitation = &$f ($we.Now.Precipitation)
             WindDirection = &$f ($we.WindDirection)
             WindSpeed = &$f ($we.WindSpeed)
-            AirTemperature = &$f ($we.AirTemperature)
-            RelativeHumidity = &$f ($we.RelativeHumidity)
+            Temperature = &$f ($we.AirTemperature)
+            Humidity = &$f ($we.RelativeHumidity)
             AirPressure = &$f ($we.AirPressure)
             UVIndex = &$f ($we.UVIndex)
 
