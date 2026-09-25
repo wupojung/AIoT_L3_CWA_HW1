@@ -169,7 +169,7 @@ Taiwan Weather GIS Web
 
 SQLite 在 Production 的使用方式必須於 Gate 5 前驗證。不得假設 local writable SQLite 等同於 Vercel persistent production database。
 
-## 9. Architecture Decisions（Gate 3 已確定）
+## 9. Architecture Decisions（Gate 5 已確定）
 
 | 問題 | 決定 |
 |---|---|
@@ -177,11 +177,8 @@ SQLite 在 Production 的使用方式必須於 Gate 5 前驗證。不得假設 l
 | GIS library | Leaflet 1.9 |
 | Web 如何讀取天氣資料 | Static JSON（`web/public/weather.json`），由 Vite publicDir 複製至 dist |
 | Frontend 測試 | Vitest 1.x（WeatherService + WeatherClassifier，43 tests）|
-
-尚待 Gate 5 確定：
-
-- Production weather data 如何定期更新？
-- Gate 5 是否需要 CI artifact publish 或 Vercel Build Hook 觸發 ETL？
+| Production 資料如何定期更新 | GitHub Actions Cron Job (`gate5-data-refresh.yml`) 定期執行 PowerShell ETL 產生新的 `weather.json` 並推播，觸發 Vercel 自動部署。 |
+| Gate 5 Persistence | Vercel 靜態託管 (`vercel.json`)，無須真實 production database。 |
 
 
 ## 10. Explicit Non-Goals

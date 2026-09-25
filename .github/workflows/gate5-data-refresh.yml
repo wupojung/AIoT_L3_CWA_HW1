@@ -1,0 +1,56 @@
+name: Gate 5 Data Refresh
+
+on:
+  schedule:
+    # 每天整點每小時更新一次 (UTC time)
+    - cron: '0 * * * *'
+  workflow_dispatch: # 允許手動觸發
+
+permissions:
+  contents: write # 需要 push 權限以更新 weather.json
+
+jobs:
+  data-refresh:
+    name: Refresh Weather Data
+    runs-on: windows-latest
+    env:
+      CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Validate CWA API secret
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CWA_API_KEY)) {
+            throw "Repository Secret CWA_API_KEY is missing or empty."
+          }
+
+      - name: Run ETL Pipeline (Fetch & Store to SQLite)
+        shell: pwsh
+        run: ./src/Run-Etl.ps1
+
+      - name: Export JSON for Frontend
+        shell: pwsh
+        run: ./src/Export-WeatherJson.ps1
+
+      - name: Commit and Push Changes
+        shell: pwsh
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 只針對 weather.json 進行追蹤
+          git add web/public/weather.json
+          
+          # 如果沒有變更會發生錯誤，用 try-catch 包裝或檢查 status
+          if (git status --porcelain web/public/weather.json) {
+            git commit -m "chore(data): auto-refresh weather.json"
+            git push
+            Write-Host "weather.json updated and pushed successfully."
+          } else {
+            Write-Host "No changes in weather.json. Skip push."
+          }
