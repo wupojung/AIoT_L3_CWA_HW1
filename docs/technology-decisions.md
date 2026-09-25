@@ -811,3 +811,85 @@ CI Verification
 ### Principle
 
 減少 CI churn 不代表跳過 CI；而是 **一次完整變更對應一次有意義的 verification run**。
+
+
+---
+
+## TD-022 — README 採 English-first + Traditional Chinese Companion
+
+**Status:** Accepted  
+**Introduced:** v1.0.0 documentation baseline
+
+### Decision
+
+GitHub default landing page uses:
+
+```text
+README.md
+= English
+
+README.zh-TW.md
+= Traditional Chinese
+```
+
+Both files provide direct language navigation.
+
+### Reason
+
+- English is the most interoperable default for public GitHub repositories.
+- Traditional Chinese remains first-class documentation for local students and future course use.
+- Root-level language variants are easier to discover than introducing a documentation framework or i18n build system.
+
+### Documentation Structure
+
+```text
+README.md
+README.zh-TW.md
+
+docs/
+├── getting-started.md
+└── getting-started.zh-TW.md
+```
+
+README stays concise. Detailed setup and execution instructions belong in Getting Started.
+
+---
+
+## TD-023 — Environment Files Follow Runtime Scope
+
+**Status:** Accepted  
+**Introduced:** v1.0.0 documentation cleanup
+
+### Problem
+
+The previous root `.env.example` contained both:
+
+```text
+CWA_API_KEY
+VITE_CARTO_API_KEY
+```
+
+However, Vite is executed from `web/` and does not read the repository-root `.env` by default.
+
+### Decision
+
+Separate configuration by runtime:
+
+```text
+/.env
+└── CWA_API_KEY
+
+/web/.env
+└── VITE_CARTO_API_KEY
+```
+
+Templates:
+
+```text
+/.env.example
+/web/.env.example
+```
+
+### Consequence
+
+The documented local setup now matches how PowerShell and Vite actually resolve environment variables.

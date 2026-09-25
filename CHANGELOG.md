@@ -20,6 +20,11 @@ MAJOR.MINOR.PATCH
 
 ### Documentation / Governance
 
+- Refactored the project landing page into a concise English-first README with a Traditional Chinese companion (`README.zh-TW.md`).
+- Moved full startup, environment, testing, and build instructions into localized Getting Started guides.
+- Replaced the outdated `docs/tech_stack.md` baseline with the current v1.0.0 technology stack.
+- Split environment templates by runtime: root `.env.example` for CWA ETL and `web/.env.example` for Vite / CARTO.
+
 - README 頂部增加 Live Demo、Release 與 MIT License badges。
 - Development Status 將 Gate decision 統一顯示為固定 `✅ PASS`，workflow / production evidence 移至獨立 Evidence 欄。
 - 新增標準 MIT `LICENSE`，明確區分 project-owned code/docs 與第三方資料 / map services。

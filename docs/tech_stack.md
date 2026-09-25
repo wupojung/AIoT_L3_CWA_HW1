@@ -1,20 +1,81 @@
-# Technology Stack Decision
+# Technology Stack
 
-## Gate 1 Runtime & Testing Tools
+Current baseline: **v1.0.0**
 
-For Gate 1 (CWA API Client & Parser), we require an environment that supports HTTP requests, JSON parsing, and an automated testing framework. 
+This document describes the technology used by the current release. Historical rationale and rejected alternatives are recorded in [Technology Decisions](technology-decisions.md).
 
-During environment inspection, we observed that neither Node.js, Python, nor the .NET SDK are currently installed or available in the system PATH. 
+## Runtime and Data Pipeline
 
-Following the principle of "select the minimum practical combination required" and avoiding unnecessary tool installations, we have chosen:
-- **Runtime:** Windows PowerShell 5.1 (Built-in)
-- **Testing Framework:** Pester 3.4.0 (Built-in PowerShell testing module)
+| Area | Technology | Notes |
+| --- | --- | --- |
+| Data Source | CWA Open Data | Dataset `O-A0003-001` |
+| ETL | PowerShell | API request, parsing, transformation, export |
+| Database | SQLite | Local persistence / integration boundary |
+| Data Contract | Static JSON | `web/public/weather.json` |
+| Full Pipeline OS | Windows | Current helper uses `winsqlite3.dll` |
 
-### Why PowerShell?
-- Native to the current Windows environment.
-- Provides `Invoke-RestMethod` for HTTP operations and JSON conversion natively.
-- Supports module encapsulation (`.psm1`).
-- Pester allows comprehensive unit testing and HTTP client mocking.
-- Does not prematurely dictate the Gate 3 Web Architecture, as ETL scripts can run independently.
+## Frontend
 
-This meets all Gate 1 requirements while maintaining a minimal and isolated footprint.
+| Area | Technology | Notes |
+| --- | --- | --- |
+| Runtime / Toolchain | Node.js 20 | Matches CI |
+| Build Tool | Vite 5 | Static production build |
+| Language | TypeScript 5 | Frontend application code |
+| GIS | Leaflet 1.9 | Map and data layers |
+| Basemap | CARTO Raster | Dark / Light in v1.0.0 |
+| Frontend Tests | Vitest 1.x | Application logic |
+
+## Quality and Delivery
+
+| Area | Technology |
+| --- | --- |
+| PowerShell Tests | Pester 6.2.0 |
+| CI | GitHub Actions |
+| Deployment | Vercel |
+| License | MIT |
+
+## Environment Scope
+
+Environment variables are separated by runtime:
+
+```text
+Repository root
+└── .env
+    └── CWA_API_KEY
+
+web/
+└── .env
+    └── VITE_CARTO_API_KEY
+```
+
+`CWA_API_KEY` is a secret and must not enter the browser.
+
+`VITE_CARTO_API_KEY` is client-side configuration and is visible in the browser bundle. Use provider-side domain / referrer restrictions where available.
+
+## Version Roadmap
+
+### v1.1.0
+
+```text
+Leaflet
++
+CARTO no-label raster
++
+Custom Taiwan Traditional Chinese labels
+```
+
+### v1.2.0
+
+```text
+Leaflet
++
+MapTiler Dark / Dataviz Dark
++
+Traditional Chinese labels
+```
+
+Both changes affect the GIS layer and therefore re-enter verification from Gate 3.
+
+## Historical Note
+
+Early Gate 1 experiments used the built-in Windows PowerShell / Pester environment available at that time. The final v1.0.0 baseline standardized on **Pester 6.2.0**, **Node.js 20**, and the current Five-Gate CI model.

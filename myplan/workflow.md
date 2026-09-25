@@ -56,6 +56,8 @@ FAIL → FIX → TEST AGAIN
 12. 本專案不使用 CRISP-DM。
 13. 由 ChatGPT / IDE Agent 執行 **文件型修改（documentation-only changes）** 時，應先完成同一輪審閱與編輯，再以單一 consolidated commit / push 提交；不得每修改一個段落、badge 或格式就立即 push。
 14. 文件修改 batching 的目的，是避免每次 push 都觸發 GitHub Actions，造成不必要的 CI run、等待時間與運算資源消耗。例外僅限：使用者明確要求立即驗證、security / secret fix、或該變更需要獨立保留 verification evidence。
+15. `README.md` 為預設英文專案首頁；繁體中文使用 `README.zh-TW.md`。兩份 README 的核心功能、版本、Quick Start、Gate Status、文件連結與 License 必須保持一致。
+16. README 只保留專案首頁需要的摘要與最短 Quick Start；完整 setup、environment、testing、build instructions 放入 `docs/getting-started*.md`，避免 README 膨脹成操作手冊。
 
 ## 3. Versioned Release / Gate Re-entry Policy
 

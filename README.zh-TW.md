@@ -1,27 +1,27 @@
 # Taiwan Weather GIS Web
 
-**English** | [繁體中文](README.zh-TW.md)
+[English](README.md) | **繁體中文**
 
 [![CI](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-twsky.vercel.app-000000?logo=vercel&logoColor=white)](https://twsky.vercel.app/)
 [![Release](https://img.shields.io/badge/release-v1.0.0-2563eb)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
 
-A Taiwan weather GIS that visualizes current observations from the Central Weather Administration (CWA).  
-The project uses a PowerShell + SQLite data pipeline and a Vite + TypeScript + Leaflet frontend, with automated verification through GitHub Actions.
+以中央氣象署（CWA）Open Data 為資料來源的台灣氣象 GIS。  
+專案使用 PowerShell + SQLite 建立資料管線，前端採用 Vite + TypeScript + Leaflet，並透過 GitHub Actions 執行自動化驗證。
 
-**Live Demo:** https://twsky.vercel.app/
+**Live Demo：** https://twsky.vercel.app/
 
-## Highlights
+## 專案特色
 
-- Real CWA Open Data (`O-A0003-001`)
-- PowerShell ETL with SQLite persistence
-- Static JSON boundary between data processing and the browser
-- Interactive Leaflet layers for temperature, humidity, and weather conditions
-- Five-Gate verification model with CI and Vercel deployment
-- Scheduled weather data refresh
+- 使用真實 CWA Open Data（`O-A0003-001`）
+- PowerShell ETL + SQLite 資料層
+- 以 Static JSON 作為資料處理層與 Browser 之間的邊界
+- Leaflet 互動式溫度、濕度與天氣圖層
+- Five-Gate 驗證流程、CI 與 Vercel Deployment
+- 排程更新氣象資料
 
-## Architecture
+## 系統架構
 
 ```text
 CWA Open Data
@@ -39,7 +39,7 @@ Vercel
 
 ## Quick Start
 
-Requires **Node.js 20.x**.
+需要 **Node.js 20.x**。
 
 ```bash
 git clone https://github.com/wupojung/AIoT_L3_CWA_HW1.git
@@ -48,7 +48,7 @@ npm ci
 npm run dev
 ```
 
-For the full data pipeline, environment variables, testing, and production build instructions, see [Getting Started](docs/getting-started.md).
+完整資料管線、環境變數、測試與 Production Build 請參考 [詳細啟動指南](docs/getting-started.zh-TW.md)。
 
 ## Technology Stack
 
@@ -64,7 +64,7 @@ For the full data pipeline, environment variables, testing, and production build
 | CI | GitHub Actions |
 | Deployment | Vercel |
 
-See [Technology Stack](docs/tech_stack.md) and [Technology Decisions](docs/technology-decisions.md) for details.
+詳細資訊請參考 [Technology Stack](docs/tech_stack.md) 與 [Technology Decisions](docs/technology-decisions.md)。
 
 ## Development Status
 
@@ -76,19 +76,19 @@ See [Technology Stack](docs/tech_stack.md) and [Technology Decisions](docs/techn
 | Gate 4 — GitHub & Continuous Integration | ✅ PASS | [Verification](https://github.com/wupojung/AIoT_L3_CWA_HW1/actions/workflows/gate4-quality.yml) |
 | Gate 5 — Vercel Deployment | ✅ PASS | [Production](https://twsky.vercel.app/) |
 
-## Release Roadmap
+## 版本規劃
 
 | Version | Direction | Status |
 | --- | --- | --- |
 | **v1.0.0** | CARTO Dark / Light baseline | Current |
-| **v1.1.0** | CARTO no-label + custom Traditional Chinese labels | Planned |
+| **v1.1.0** | CARTO no-label + 自製繁體中文標籤 | Planned |
 | **v1.2.0** | MapTiler Dark + Traditional Chinese labels | Planned |
 
-See [CHANGELOG.md](CHANGELOG.md) for release history.
+版本歷史請參考 [CHANGELOG.md](CHANGELOG.md)。
 
-## Documentation
+## 文件
 
-- [Getting Started](docs/getting-started.md)
+- [詳細啟動指南](docs/getting-started.zh-TW.md)
 - [Architecture](docs/architecture.md)
 - [Technology Stack](docs/tech_stack.md)
 - [Testing Strategy](docs/testing.md)
@@ -98,6 +98,6 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
-Project-owned source code and documentation are licensed under the [MIT License](LICENSE).
+本專案自行撰寫的程式碼與文件採用 [MIT License](LICENSE)。
 
-CWA Open Data, CARTO / OpenStreetMap content, and third-party packages remain subject to their respective licenses and terms.
+CWA Open Data、CARTO / OpenStreetMap 內容與第三方套件仍受各自的授權條款約束。
