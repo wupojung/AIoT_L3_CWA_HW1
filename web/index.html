@@ -1,27 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Taiwan Weather Map</title>
+    <title>Taiwan Weather GIS — Current Observations</title>
+    <meta name="description" content="Real-time Taiwan weather station observations visualised on an interactive GIS map. Data sourced from CWA Open Data." />
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   </head>
   <body>
     <div id="app">
+
+      <!-- ── Loading / Error Overlay ─────────────────────────────────────── -->
       <div id="status-overlay" class="overlay">
         <div class="spinner"></div>
         <div class="message" id="status-message">Loading observations...</div>
       </div>
-      
-      <header class="app-header">
-        <h1>Taiwan Weather Map</h1>
-        <div class="header-subtitle">Real-time Observations</div>
+
+      <!-- ── Full-screen Map ────────────────────────────────────────────── -->
+      <div id="map"></div>
+
+      <!-- ── Top-left Header ───────────────────────────────────────────── -->
+      <header class="app-header" aria-label="Application title">
+        <h1>Taiwan Weather GIS</h1>
+        <div class="header-subtitle">Current Weather Observation</div>
+        <div class="header-meta">
+          <span id="station-count" class="header-badge"></span>
+          <span id="last-updated" class="header-badge"></span>
+        </div>
       </header>
 
-      <div id="map"></div>
+      <!-- ── Right-side Layer Panel ─────────────────────────────────────── -->
+      <aside id="layer-panel" class="layer-panel" aria-label="Layer controls">
+
+        <div class="panel-header">
+          <span class="panel-title">Layers</span>
+        </div>
+
+        <!-- Base Map section -->
+        <div class="panel-section">
+          <div class="panel-section-label">BASE MAP</div>
+          <label class="radio-row" id="basemap-dark-label">
+            <input type="radio" name="basemap" id="basemap-dark" value="dark" checked aria-label="Dark basemap" />
+            <span class="radio-dot"></span>
+            Dark
+          </label>
+          <label class="radio-row" id="basemap-light-label">
+            <input type="radio" name="basemap" id="basemap-light" value="light" aria-label="Light basemap" />
+            <span class="radio-dot"></span>
+            Light
+          </label>
+        </div>
+
+        <div class="panel-divider"></div>
+
+        <!-- Data Layer section -->
+        <div class="panel-section">
+          <div class="panel-section-label">DATA LAYER</div>
+          <label class="radio-row" id="layer-temp-label">
+            <input type="radio" name="datalayer" id="layer-temp" value="temperature" checked aria-label="Temperature layer" />
+            <span class="radio-dot"></span>
+            🌡 Temperature
+          </label>
+          <label class="radio-row" id="layer-hum-label">
+            <input type="radio" name="datalayer" id="layer-hum" value="humidity" aria-label="Humidity layer" />
+            <span class="radio-dot"></span>
+            💧 Humidity
+          </label>
+          <label class="radio-row" id="layer-wx-label">
+            <input type="radio" name="datalayer" id="layer-wx" value="weather" aria-label="Weather condition layer" />
+            <span class="radio-dot"></span>
+            ⛅ Weather
+          </label>
+        </div>
+
+      </aside>
+
+      <!-- ── Mobile Panel Toggle ────────────────────────────────────────── -->
+      <button id="panel-toggle" class="panel-toggle-btn" aria-label="Toggle layer panel" aria-expanded="false">
+        ⊞ Layers
+      </button>
+
+      <!-- ── Bottom-left Legend ─────────────────────────────────────────── -->
+      <div id="legend" class="legend-panel" aria-label="Map legend"></div>
+
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

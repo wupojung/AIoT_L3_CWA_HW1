@@ -1,6 +1,7 @@
 import './styles/style.css';
 import { WeatherService } from './services/WeatherService';
 import { MapManager } from './map/MapManager';
+import { LayerControl } from './ui/LayerControl';
 
 async function bootstrap() {
     const statusOverlay = document.getElementById('status-overlay')!;
@@ -9,9 +10,7 @@ async function bootstrap() {
     const showStatus = (msg: string, isError = false) => {
         statusOverlay.style.display = 'flex';
         statusMessage.textContent = msg;
-        if (isError) {
-            statusMessage.style.color = '#e74c3c';
-        }
+        if (isError) statusMessage.style.color = '#EF4444';
     };
 
     const hideStatus = () => {
@@ -20,7 +19,7 @@ async function bootstrap() {
 
     try {
         showStatus('Loading observations...');
-        
+
         const weatherService = new WeatherService();
         const observations = await weatherService.getObservations();
 
@@ -34,6 +33,13 @@ async function bootstrap() {
         const mapManager = new MapManager('map');
         mapManager.init();
         mapManager.renderObservations(observations);
+
+        const layerControl = new LayerControl(mapManager);
+        layerControl.init();
+        layerControl.updateHeader(
+            mapManager.getStationCount(),
+            mapManager.getLastUpdated()
+        );
 
     } catch (err) {
         console.error(err);
